@@ -1,0 +1,13 @@
+bin
+obj
+DerivedData
+ofxKinectV2*
+*.make
+*.qbs
+*.user
+*.plist
+*.xconfig
+Makefile
+/src/*.swm
+/src/*.swp
+/src/*.swo
