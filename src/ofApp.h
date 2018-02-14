@@ -2,9 +2,11 @@
 
 #include "ofMain.h"
 #include "ofxGui.h"
+//#include "ofxOpenCv.h"
 #include "ofxKinectV2.h"
 
-#define MOVES_IN_HIST
+
+//#define MOVES_IN_HIST
 
 class ofApp : public ofBaseApp{
 
@@ -28,17 +30,33 @@ class ofApp : public ofBaseApp{
 	ofxPanel panel;
     
         vector < shared_ptr<ofxKinectV2> > kinects;
-//	ofxKinectV2 kinect;
+	shared_ptr<ofxKinectV2> kinect;
 
-	int closestSpot[4200][2]; //21000+ pixel in frame and 1 hand can not occupy more then 4200 pixels
+	/*
+	* frame = 210 000+ px
+	* frame/9 = 24 000+ px
+	* 12 000 px could be more than enough for now
+	*/
+
+	int closestSpot[12000][2]; 
 	int sizeOfHand;	
+	int timer;
+	int h;
+	int w;
+	int Xavg;
+	int Yavg;	
+
+	float howLong;
+	float timeStart;
+	float timeEnd;
+	int offsetDepth;
 
 	ofFbo fbo;    
         vector <ofTexture> texDepth;
         vector <ofTexture> texRGB;
-//	vector <ofCircle> fingers;
+	
 	bool foundHand;
-	int coor [MOVES_IN_HIST][3];
+//	int coor [MOVES_IN_HIST][3];
 	int closestDepth;
 
 };
