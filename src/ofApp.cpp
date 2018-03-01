@@ -54,19 +54,20 @@ void ofApp::update(){
         if(kinect->isFrameNew()){
         	texDepth[0].loadData(kinect->getDepthPixels());
         	texRGB[0].loadData(kinect->getRgbPixels());
-
+		getDepth = kinects[0]->getDepthPixels();
 		ofTexture depth = texDepth[0];
 
 		w = texDepth[0].getWidth();
 		h = texDepth[0].getHeight();
 		sizeOfHand = 0;
 		closestDepth = -1; // some not reachable value in case hand get further 
-		if((int)ofGetElapsedTimef()%2==0){
+		if((int)ofGetElapsedTimef()%5==0){
 			printf("NEW UPDATE \t time: %f \n", ofGetElapsedTimef());
 			timeStart = ofGetElapsedTimef();
 			for(int i = (int) w/3; i < (int) ((2/3.0)*w); i++){
 				for(int j = (int)h/3; j < (int) ((2/3.0)*h); j++){			
-					int temp = kinects[0]->getDepthPixels()[i*w + j];
+		
+					int temp = getDepth[i*w + j];//kinects[0]->getDepthPixels()[i*w + j];
 					
 					if(temp == closestDepth){
 					//printf("time: %f\n", ofGetElapsedTimef());
@@ -97,16 +98,9 @@ void ofApp::update(){
 			printf("howLong: %f\n", howLong);
 		
 
-//			timeStart = ofGetElapsedTimef();
-				
-		 
-	
 		printf("sizeOfHand: %d \n", sizeOfHand);
 //	}
 
-       // timeEnd = ofGetElapsedTimef();
-       // howLong = timeEnd - timeStart;
-      //  printf("howLong: %f\n",howLong);
 
 //	contourFinder.findContours(texDepth,0,50,0,false,true);
 	Xavg = 0;

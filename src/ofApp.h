@@ -31,6 +31,8 @@ class ofApp : public ofBaseApp{
     
         vector < shared_ptr<ofxKinectV2> > kinects;
 	shared_ptr<ofxKinectV2> kinect;
+	
+	ofPixels getDepth;
 
 	/*
 	* frame = 210 000+ px
