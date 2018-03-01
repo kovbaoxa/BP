@@ -51,49 +51,57 @@ void ofApp::setup(){
 void ofApp::update(){
     
 	kinect->update();
-        if( kinect->isFrameNew() ){
-            texDepth[0].loadData( kinect->getDepthPixels() );
-            texRGB[0].loadData( kinect->getRgbPixels() );
+        if(kinect->isFrameNew()){
+        	texDepth[0].loadData(kinect->getDepthPixels());
+        	texRGB[0].loadData(kinect->getRgbPixels());
 
 		ofTexture depth = texDepth[0];
 
 		w = texDepth[0].getWidth();
 		h = texDepth[0].getHeight();
-
+		sizeOfHand = 0;
 		closestDepth = -1; // some not reachable value in case hand get further 
 		if((int)ofGetElapsedTimef()%2==0){
 			printf("NEW UPDATE \t time: %f \n", ofGetElapsedTimef());
+			timeStart = ofGetElapsedTimef();
 			for(int i = (int) w/3; i < (int) ((2/3.0)*w); i++){
-				for(int j = (int)h/3; j < (int) ((2/3.0)*h); j++){
-				
+				for(int j = (int)h/3; j < (int) ((2/3.0)*h); j++){			
 					int temp = kinects[0]->getDepthPixels()[i*w + j];
-					if(temp > closestDepth){
-						closestDepth = temp;
-					//	printf("i: %d \t j: %d \t closestDepth: %d\n",i,j,closestDepth);
-					}				
-				}
-   			}
-
-			sizeOfHand = 0;
-
-//			timeStart = ofGetElapsedTimef();
-         		for(int i = (int) w/3; i < (int) ((2/3.0)*w); i++){
-        			for(int j = (int) h/3; j < (int) ((2/3.0)*h); j++){
-		        		 int temp = kinect->getDepthPixels()[i*w + j];
-					//depth[i*w + j];//kinect->getDepthPixels()[i*w + j];
-					//printf("%d", temp);
-				
-		               		if(temp == closestDepth){
+					
+					if(temp == closestDepth){
 					//printf("time: %f\n", ofGetElapsedTimef());
 					//printf("closestDepth: %d \t temp: %d \n", closestDepth, temp);
 						closestSpot[sizeOfHand][0] = i;
 						closestSpot[sizeOfHand][1] = j;
 		                       		sizeOfHand++;
-						printf("i: %d\t j: %d\n", i,j);
+						//printf("i: %d\t j: %d\n", i,j);
 		              		 }
-		      		 }
-			}
-			printf("sizeOfHand: %d \n", sizeOfHand);
+	
+				
+					if(temp > closestDepth){
+						closestDepth = temp;
+				//	printf("i: %d \t j: %d \t closestDepth: %d\n",i,j,closestDepth);
+						for(int k = sizeOfHand; k > 0; k--){
+							closestSpot[k][0] = -1;
+							closestSpot[k][1] = -1;
+						}
+						closestSpot[0][0] = i;
+						closestSpot[0][1] = j;
+						sizeOfHand = 1;
+						
+					}				
+				}
+   			}
+			timeEnd = ofGetElapsedTimef();
+			howLong = timeEnd-timeStart;
+			printf("howLong: %f\n", howLong);
+		
+
+//			timeStart = ofGetElapsedTimef();
+				
+		 
+	
+		printf("sizeOfHand: %d \n", sizeOfHand);
 //	}
 
        // timeEnd = ofGetElapsedTimef();
@@ -105,8 +113,10 @@ void ofApp::update(){
 	Yavg = 0;
 	if(sizeOfHand > 0){
 		for(int i = 0; i < sizeOfHand; i++){
-			Xavg+=(closestSpot[i][0]);
-			Yavg+=(closestSpot[i][1]);
+			if(closestSpot[i][0] != -1){ 	//just to be sure
+				Xavg+=(closestSpot[i][0]);
+				Yavg+=(closestSpot[i][1]);
+			}
 		}
 	
 		Xavg /= sizeOfHand;
