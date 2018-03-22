@@ -26,6 +26,9 @@ class ofApp : public ofBaseApp{
 		void gotMessage(ofMessage msg);
 
 		void drawFbo();
+		void swap(int* a, int* b);
+		int partition(int arr[], int low, int high);
+		int quickSort(int arr[], int low, int high);
         
 	ofxPanel panel;
     
@@ -40,6 +43,8 @@ class ofApp : public ofBaseApp{
 	* 12 000 px could be more than enough for now
 	*/
 
+	int myDepth[217088];
+	int medianNeigh[9];
 	int closestSpot[12000][2]; 
 	int sizeOfHand;	
 	int timer;

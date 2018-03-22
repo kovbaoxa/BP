@@ -63,25 +63,25 @@ void ofApp::update(){
 		closestDepth = -1; // some not reachable value in case hand get further 
 		if((int)ofGetElapsedTimef()%5==0){
 			printf("NEW UPDATE \t time: %f \n", ofGetElapsedTimef());
-			timeStart = ofGetElapsedTimef();
+//			timeStart = ofGetElapsedTimef();
 			for(int i = (int) w/3; i < (int) ((2/3.0)*w); i++){
 				for(int j = (int)h/3; j < (int) ((2/3.0)*h); j++){			
 		
 					int temp = getDepth[i*w + j];//kinects[0]->getDepthPixels()[i*w + j];
 					
 					if(temp == closestDepth){
-					//printf("time: %f\n", ofGetElapsedTimef());
 					//printf("closestDepth: %d \t temp: %d \n", closestDepth, temp);
 						closestSpot[sizeOfHand][0] = i;
 						closestSpot[sizeOfHand][1] = j;
 		                       		sizeOfHand++;
+						//printf("closest depth: %d \n", temp);
 						//printf("i: %d\t j: %d\n", i,j);
 		              		 }
 	
 				
 					if(temp > closestDepth){
 						closestDepth = temp;
-				//	printf("i: %d \t j: %d \t closestDepth: %d\n",i,j,closestDepth);
+					//printf("i: %d \t j: %d \t closestDepth: %d\n",i,j,closestDepth);
 						for(int k = sizeOfHand; k > 0; k--){
 							closestSpot[k][0] = -1;
 							closestSpot[k][1] = -1;
@@ -93,9 +93,9 @@ void ofApp::update(){
 					}				
 				}
    			}
-			timeEnd = ofGetElapsedTimef();
-			howLong = timeEnd-timeStart;
-			printf("howLong: %f\n", howLong);
+//			timeEnd = ofGetElapsedTimef();
+//			howLong = timeEnd-timeStart;
+//			printf("howLong: %f\n", howLong);
 		
 
 		printf("sizeOfHand: %d \n", sizeOfHand);
@@ -141,8 +141,14 @@ void ofApp::draw(){
 	ofSetColor(255,0,0);
 //	ofDrawBox(-100,-100,0,50);
 	int r = (sizeOfHand > 100) ? (sizeOfHand/2) : 50;
-	
+	ofSetLineWidth(3);	
 	ofDrawBox(Xavg,Yavg,0,r,r,5);
+	//ofDrawBox(-5,-33,0,r,r,5);
+
+//	for(int i = (int) w/3; i < (int) ((2/3.0)*w); i++){
+//		for(int j = (int)h/3; j < (int) ((2/3.0)*h); j++){			
+//			if 
+
 
 /*	for(int i = 0; i < sizeOfHand; i++){
 		ofDrawSphere((closestSpot[i][0]-256),(closestSpot[i][1]-212),5);
@@ -166,7 +172,7 @@ void ofApp::draw(){
 
 	fbo.draw(200,shiftY);
  	ofSetColor(255,0,0);
-	panel.draw();
+//	panel.draw();
 	ofSetColor(255,255,255);
 
 }
@@ -214,5 +220,41 @@ void ofApp::gotMessage(ofMessage msg){
 
 //--------------------------------------------------------------
 void ofApp::dragEvent(ofDragInfo dragInfo){ 
+
+}
+
+/*
+* quick sort from 
+* https://www.geeksforgeeks.org/quick-sort/
+*/
+
+void swap(int* a, int* b){
+	int temp = *a;
+	*a = *b;
+	*b = temp;
+}
+
+int partition(int array[], int low, int high){
+	int pivot = array[high];
+	int i = low - 1;
+	
+	for(int j = low; j <= high - 1; j++){
+		if(array[j] <= pivot){
+			i++;
+			swap(&array[i], &array[j]);
+		}	
+	}	
+	swap(&array[i+1], &array[high]);
+	return (i+1);
+}
+
+
+void quickSort(int array[], int low, int high){
+	if(low<high){
+		int partI = partition(array, low, high);
+		quickSort(array, low, partI - 1);
+		quickSort(array, partI + 1, high);
+
+	}
 
 }
