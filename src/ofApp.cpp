@@ -64,19 +64,18 @@ void ofApp::update(){
 		if((int)ofGetElapsedTimef()%5==0){
 			printf("NEW UPDATE \t time: %f \n", ofGetElapsedTimef());
 //			timeStart = ofGetElapsedTimef();
-			for(int i = (int) w/3; i < (int) ((2/3.0)*w); i++){
-				for(int j = (int)h/3; j < (int) ((2/3.0)*h); j++){			
+			for(int i = 0; i < w-1; i++){
+ //= (int) w/3; i < (int) ((2/3.0)*w); i++){
+				for(int j = 0;j < h-1; j++){//= (int) h/3; j < (int) ((2/3.0)*h); j++){// 			
 		
-					int temp = getDepth[i*w + j];//kinects[0]->getDepthPixels()[i*w + j];
-					
+					int temp = getDepth[j*w + i];//kinects[0]->getDepthPixels()[i*w + j];
+					myDepth[j*w + i] = temp;	
 					if(temp == closestDepth){
 					//printf("closestDepth: %d \t temp: %d \n", closestDepth, temp);
 						closestSpot[sizeOfHand][0] = i;
 						closestSpot[sizeOfHand][1] = j;
 		                       		sizeOfHand++;
-						//printf("closest depth: %d \n", temp);
-						//printf("i: %d\t j: %d\n", i,j);
-		              		 }
+							              		 }
 	
 				
 					if(temp > closestDepth){
@@ -96,9 +95,36 @@ void ofApp::update(){
 //			timeEnd = ofGetElapsedTimef();
 //			howLong = timeEnd-timeStart;
 //			printf("howLong: %f\n", howLong);
-		
+			
+			int arr[9];		
+			int m;
+
+ 			for(int k = 0; k < w; k++){
+				for(int l = 0; l < h; l++){			
+					m = 0;
+					for(int n = k-1; n < k+1; n++){
+						for(int o = l-1; o < l+1; o++){
+							arr[m] = myDepth[o*w + k];
+							m++;
+						}
+					}
+					quickSort(arr, 0, 8);
+					myDepth[l*w + k] = arr[4]; 
+
+				
+
+
+
+				 }
+			}
+
 
 		printf("sizeOfHand: %d \n", sizeOfHand);
+		printf("closest depth: %d \n", closestDepth);
+		for(int k = 0; k < sizeOfHand-1; k++){
+			printf("i: %d\t j: %d\n",closestSpot[k][0],closestSpot[k][1]);
+		}
+
 //	}
 
 
@@ -123,6 +149,8 @@ void ofApp::update(){
 
 		}
 	} //end for if isFrameNew
+
+	
 }
 
 
@@ -228,13 +256,13 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 * https://www.geeksforgeeks.org/quick-sort/
 */
 
-void swap(int* a, int* b){
+void ofApp::swap(int* a, int* b){
 	int temp = *a;
 	*a = *b;
 	*b = temp;
 }
 
-int partition(int array[], int low, int high){
+int ofApp::partition(int array[], int low, int high){
 	int pivot = array[high];
 	int i = low - 1;
 	
@@ -249,7 +277,7 @@ int partition(int array[], int low, int high){
 }
 
 
-void quickSort(int array[], int low, int high){
+void ofApp::quickSort(int array[], int low, int high){
 	if(low<high){
 		int partI = partition(array, low, high);
 		quickSort(array, low, partI - 1);
