@@ -1,5 +1,10 @@
 #include "ofApp.h"
 
+#define WIDTH 512
+#define HEIGHT 424
+#define loopX(x) for(int x = 0; x < WIDTH-1; x++)
+#define loopY(y) for(int y = 0; y < HEIGHT-1; y++)
+
 //--------------------------------------------------------------
 void ofApp::setup(){
     
@@ -28,23 +33,14 @@ void ofApp::setup(){
 
 	kinect = kinects[0];
 
-	panel.loadFromFile("settings.xml");
-
-//	w = texDepth[0].getWidth();
-//	h = texDepth[0].getHeight();
-
 	fbo.allocate(512,424,GL_RGBA,4);//GL_LUMINANCE);
 
-	foundHand = false;   
+	//foundHand = false;   
 
 	fbo.begin();
 	ofClear(0.0f,0.0f,0.0f,0.0f);//255,255,255,0);
 	fbo.end();
 
-	//ofEnableAlphaBlending();
-	//texDepth[0].setAlphaMask(fbo.getTexture());
-
-//	closestDepth = -1; // some not reachable value
 }
 
 //--------------------------------------------------------------
@@ -57,26 +53,22 @@ void ofApp::update(){
 		getDepth = kinects[0]->getDepthPixels();
 		ofTexture depth = texDepth[0];
 
-		w = texDepth[0].getWidth();
-		h = texDepth[0].getHeight();
 		sizeOfHand = 0;
 		closestDepth = -1; // some not reachable value in case hand get further 
 		if((int)ofGetElapsedTimef()%5==0){
 			printf("NEW UPDATE \t time: %f \n", ofGetElapsedTimef());
+
 //			timeStart = ofGetElapsedTimef();
-			for(int i = 0; i < w-1; i++){
- //= (int) w/3; i < (int) ((2/3.0)*w); i++){
-				for(int j = 0;j < h-1; j++){//= (int) h/3; j < (int) ((2/3.0)*h); j++){// 			
-		
-					int temp = getDepth[j*w + i];//kinects[0]->getDepthPixels()[i*w + j];
-					myDepth[j*w + i] = temp;	
+			loopX(i){
+				loopY(j){
+					int temp = getDepth[j*WIDTH + i];
+					myDepth[j*WIDTH + i] = temp;	
 					if(temp == closestDepth){
 					//printf("closestDepth: %d \t temp: %d \n", closestDepth, temp);
 						closestSpot[sizeOfHand][0] = i;
 						closestSpot[sizeOfHand][1] = j;
 		                       		sizeOfHand++;
-							              		 }
-	
+					 }
 				
 					if(temp > closestDepth){
 						closestDepth = temp;
@@ -87,67 +79,57 @@ void ofApp::update(){
 						}
 						closestSpot[0][0] = i;
 						closestSpot[0][1] = j;
-						sizeOfHand = 1;
-						
-					}				
+						sizeOfHand = 1;	
+					}		
 				}
    			}
 //			timeEnd = ofGetElapsedTimef();
 //			howLong = timeEnd-timeStart;
 //			printf("howLong: %f\n", howLong);
-			
+
 			int arr[9];		
 			int m;
 
- 			for(int k = 0; k < w; k++){
-				for(int l = 0; l < h; l++){			
+			loopX(k){
+				loopY(l){
 					m = 0;
 					for(int n = k-1; n < k+1; n++){
 						for(int o = l-1; o < l+1; o++){
-							arr[m] = myDepth[o*w + k];
+							arr[m] = myDepth[o*WIDTH + k];
 							m++;
 						}
 					}
 					quickSort(arr, 0, 8);
-					myDepth[l*w + k] = arr[4]; 
-
-				
-
-
-
+					myDepth[l*WIDTH + k] = arr[4];
 				 }
 			}
 
-
-		printf("sizeOfHand: %d \n", sizeOfHand);
-		printf("closest depth: %d \n", closestDepth);
-		for(int k = 0; k < sizeOfHand-1; k++){
-			printf("i: %d\t j: %d\n",closestSpot[k][0],closestSpot[k][1]);
-		}
-
-//	}
-
+			printf("sizeOfHand: %d \n", sizeOfHand);
+			printf("closest depth: %d \n", closestDepth);
+			for(int k = 0; k < sizeOfHand-1; k++){
+				printf("i: %d\t j: %d\n",closestSpot[k][0],closestSpot[k][1]);
+			}
 
 //	contourFinder.findContours(texDepth,0,50,0,false,true);
-	Xavg = 0;
-	Yavg = 0;
-	if(sizeOfHand > 0){
-		for(int i = 0; i < sizeOfHand; i++){
-			if(closestSpot[i][0] != -1){ 	//just to be sure
-				Xavg+=(closestSpot[i][0]);
-				Yavg+=(closestSpot[i][1]);
-			}
-		}
+			Xavg = 0;
+			Yavg = 0;
+			if(sizeOfHand > 0){
+				for(int i = 0; i < sizeOfHand; i++){
+					if(closestSpot[i][0] != -1){ 	//just to be sure
+						Xavg+=(closestSpot[i][0]);
+						Yavg+=(closestSpot[i][1]);
+					}
+				}
 	
-		Xavg /= sizeOfHand;
-		Yavg /= sizeOfHand;
-		printf("Xavg: %d \t Yavg: %d \n", Xavg,Yavg);
-		/*coord. system is (-256,256)x(-212,212)*/
-		Xavg -= 255;
-		Yavg -=212;
-	}
+				Xavg /= sizeOfHand;
+				Yavg /= sizeOfHand;
+				printf("Xavg: %d \t Yavg: %d \n", Xavg,Yavg);
+				/*coord. system is (-256,256)x(-212,212)*/
+				Xavg -= 255;
+				Yavg -=212;
+			}
 
-		}
+		} //end for time partition
 	} //end for if isFrameNew
 
 	
@@ -173,18 +155,12 @@ void ofApp::draw(){
 	ofDrawBox(Xavg,Yavg,0,r,r,5);
 	//ofDrawBox(-5,-33,0,r,r,5);
 
-//	for(int i = (int) w/3; i < (int) ((2/3.0)*w); i++){
-//		for(int j = (int)h/3; j < (int) ((2/3.0)*h); j++){			
-//			if 
 
 
 /*	for(int i = 0; i < sizeOfHand; i++){
 		ofDrawSphere((closestSpot[i][0]-256),(closestSpot[i][1]-212),5);
 	}*/
 	
-/*	for (int i = 0; i < contourFinder.nBlobs; i++){
-        	contourFinder.blobs[i].draw();
-	} */
 
 	fbo.end();
 
