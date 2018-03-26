@@ -5,6 +5,10 @@
 //#include "ofxOpenCv.h"
 #include "ofxKinectV2.h"
 
+#define WIDTH 512
+#define HEIGHT 424
+#define NEIGHBORHOOD 9 //has to be devisible by 9 for calculating median filter
+
 
 //#define MOVES_IN_HIST
 
@@ -29,7 +33,9 @@ class ofApp : public ofBaseApp{
 		void swap(int* a, int* b);
 		int partition(int arr[], int low, int high);
 		void quickSort(int arr[], int low, int high);
-        
+		void findClosestSpot(int myDepth[]);
+		void filterNoise(int myDepth[]);
+
 	ofxPanel panel;
     
         vector < shared_ptr<ofxKinectV2> > kinects;
@@ -40,16 +46,16 @@ class ofApp : public ofBaseApp{
 	/*
 	* frame = 210 000+ px
 	* frame/9 = 24 000+ px
-	* 12 000 px could be more than enough for now
+	* 20 000 px could be more than enough for now
 	*/
 
 	int myDepth[217088];
 	int medianNeigh[9];
-	int closestSpot[12000][2]; 
+	int closestSpot[(WIDTH*HEIGHT)/9][2]; 
 	int sizeOfHand;	
 	int timer;
-	int h;
-	int w;
+//	int h;
+//	int w;
 	int Xavg;
 	int Yavg;	
 

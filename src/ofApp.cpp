@@ -1,7 +1,9 @@
 #include "ofApp.h"
 
-#define WIDTH 512
-#define HEIGHT 424
+//#define WIDTH 512
+//#define HEIGHT 424
+//#define NEIGHBORHOOD 9	// HAS TO BE DEVISIBLE BY 9 for calculating median filter
+
 #define loopX(x) for(int x = 0; x < WIDTH-1; x++)
 #define loopY(y) for(int y = 0; y < HEIGHT-1; y++)
 
@@ -35,7 +37,7 @@ void ofApp::setup(){
 
 	fbo.allocate(512,424,GL_RGBA,4);//GL_LUMINANCE);
 
-	//foundHand = false;   
+	foundHand = false;   
 
 	fbo.begin();
 	ofClear(0.0f,0.0f,0.0f,0.0f);//255,255,255,0);
@@ -53,61 +55,32 @@ void ofApp::update(){
 		getDepth = kinects[0]->getDepthPixels();
 		ofTexture depth = texDepth[0];
 
-		sizeOfHand = 0;
-		closestDepth = -1; // some not reachable value in case hand get further 
+//		sizeOfHand = 0;
+//		closestDepth = -1; // some not reachable value in case hand get further 
 		if((int)ofGetElapsedTimef()%5==0){
 			printf("NEW UPDATE \t time: %f \n", ofGetElapsedTimef());
 
-//			timeStart = ofGetElapsedTimef();
-			loopX(i){
-				loopY(j){
-					int temp = getDepth[j*WIDTH + i];
-					myDepth[j*WIDTH + i] = temp;	
-					if(temp == closestDepth){
-					//printf("closestDepth: %d \t temp: %d \n", closestDepth, temp);
-						closestSpot[sizeOfHand][0] = i;
-						closestSpot[sizeOfHand][1] = j;
-		                       		sizeOfHand++;
-					 }
-				
-					if(temp > closestDepth){
-						closestDepth = temp;
-					//printf("i: %d \t j: %d \t closestDepth: %d\n",i,j,closestDepth);
-						for(int k = sizeOfHand; k > 0; k--){
-							closestSpot[k][0] = -1;
-							closestSpot[k][1] = -1;
-						}
-						closestSpot[0][0] = i;
-						closestSpot[0][1] = j;
-						sizeOfHand = 1;	
-					}		
+			//load picture into own array
+			loopX(x){
+				loopY(y){
+					myDepth[y*WIDTH + x] = getDepth[y*WIDTH + x];
+				//	printf("%d\t",myDepth[y*WIDTH +x]);
 				}
-   			}
-//			timeEnd = ofGetElapsedTimef();
+			}
+
+
+//			timeStart = ofGetElapsedTimef();
+		//			timeEnd = ofGetElapsedTimef();
 //			howLong = timeEnd-timeStart;
 //			printf("howLong: %f\n", howLong);
 
-			int arr[9];		
-			int m;
-
-			loopX(k){
-				loopY(l){
-					m = 0;
-					for(int n = k-1; n < k+1; n++){
-						for(int o = l-1; o < l+1; o++){
-							arr[m] = myDepth[o*WIDTH + k];
-							m++;
-						}
-					}
-					quickSort(arr, 0, 8);
-					myDepth[l*WIDTH + k] = arr[4];
-				 }
-			}
+			filterNoise(myDepth);
+			findClosestSpot(myDepth);
 
 			printf("sizeOfHand: %d \n", sizeOfHand);
 			printf("closest depth: %d \n", closestDepth);
 			for(int k = 0; k < sizeOfHand-1; k++){
-				printf("i: %d\t j: %d\n",closestSpot[k][0],closestSpot[k][1]);
+			//	printf("i: %d\t j: %d\n",closestSpot[k][0],closestSpot[k][1]);
 			}
 
 //	contourFinder.findContours(texDepth,0,50,0,false,true);
@@ -150,7 +123,7 @@ void ofApp::draw(){
 	//ofRotate(ofGetElapsedTimef()*50,1,0,0.5);
 	ofSetColor(255,0,0);
 //	ofDrawBox(-100,-100,0,50);
-	int r = (sizeOfHand > 100) ? (sizeOfHand/2) : 50;
+	int r = (sizeOfHand > 100) ? (100) : 50;
 	ofSetLineWidth(3);	
 	ofDrawBox(Xavg,Yavg,0,r,r,5);
 	//ofDrawBox(-5,-33,0,r,r,5);
@@ -181,6 +154,117 @@ void ofApp::draw(){
 
 }
 
+/*
+* Find closest spot according to depth data.
+*
+*/
+void ofApp::findClosestSpot(int myDepth[]){
+	closestDepth = -1;
+	sizeOfHand = 0;
+	printf("--start searching \n");
+	int temp;
+	closestDepth = *std::max_element(myDepth, myDepth+WIDTH*HEIGHT);	
+//	std::cout << *std::max_element(myDepth, myDepth+WIDTH*HEIGHT) << std::endl;
+	
+	loopX(i){
+		loopY(j){
+	//		int temp = getDepth[j*WIDTH + i];
+	//		myDepth[j*WIDTH + i] = temp;	
+			temp = myDepth[j*WIDTH + i];
+			//printf("myDepth %d \t",myDepth[j*WIDTH + i]);
+			if(temp == closestDepth){
+				//printf("closestDepth: %d \t temp: %d \n", closestDepth, temp);
+				if(sizeOfHand < (WIDTH*HEIGHT)/9){
+					closestSpot[sizeOfHand][0] = i;
+					closestSpot[sizeOfHand][1] = j;
+					sizeOfHand++;
+					//Hand found=true?
+				}else{
+					foundHand = false;
+				//	printf("---NOT HAND---");
+				}
+			 }
+			/*else if(temp > closestDepth){
+				closestDepth = temp;
+			//	printf("temp = %d \t closestDepth = %d\n", temp, closestDepth);
+				//printf("i: %d \t j: %d \t closestDepth: %d\n",i,j,closestDepth);
+				for(int k = sizeOfHand; k > -1; k--){
+					closestSpot[k][0] = -1;
+					closestSpot[k][1] = -1;
+				}
+				closestSpot[0][0] = i;
+				closestSpot[0][1] = j;
+				sizeOfHand = 1;	
+			}	*/	
+		}
+   	}
+	printf("--search done\n");
+}
+/*
+* Filter noise from picture (at least some of it) with median filter.
+* Median is calculated from size defined NEIGHBORHOOD.
+*/
+void ofApp::filterNoise(int myDepth[]){
+	printf("--filter started\n");
+	int arr[NEIGHBORHOOD];
+	int m;
+	int offset = NEIGHBORHOOD/9; 
+
+	loopX(k){
+		loopY(l){
+			m = 0;
+			//leave outer pixels out of blurring
+			if(l > 0 && l < 423 && k > 0 && k < 511){ 
+				for(int n = k-offset; n < k+offset; n++){
+					for(int o = l-offset; o < l+offset; o++){
+						arr[m] = myDepth[o*WIDTH + n];
+						m++;
+					}
+				}
+				quickSort(arr, 0, 8);
+				myDepth[l*WIDTH + k] = arr[4];
+			}
+				
+		 }
+	}
+	printf("--done filter\n");
+}
+
+/*
+* quick sort from 
+* https://www.geeksforgeeks.org/quick-sort/
+*/
+
+void ofApp::swap(int* a, int* b){
+	int temp = *a;
+	*a = *b;
+	*b = temp;
+}
+
+int ofApp::partition(int array[], int low, int high){
+	int pivot = array[high];
+	int i = low - 1;
+	
+	for(int j = low; j <= high - 1; j++){
+		if(array[j] <= pivot){
+			i++;
+			swap(&array[i], &array[j]);
+		}	
+	}	
+	swap(&array[i+1], &array[high]);
+	return (i+1);
+}
+
+
+void ofApp::quickSort(int array[], int low, int high){
+	if(low<high){
+		int partI = partition(array, low, high);
+		quickSort(array, low, partI - 1);
+		quickSort(array, partI + 1, high);
+
+	}
+
+}
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
 
@@ -227,38 +311,4 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 
 }
 
-/*
-* quick sort from 
-* https://www.geeksforgeeks.org/quick-sort/
-*/
 
-void ofApp::swap(int* a, int* b){
-	int temp = *a;
-	*a = *b;
-	*b = temp;
-}
-
-int ofApp::partition(int array[], int low, int high){
-	int pivot = array[high];
-	int i = low - 1;
-	
-	for(int j = low; j <= high - 1; j++){
-		if(array[j] <= pivot){
-			i++;
-			swap(&array[i], &array[j]);
-		}	
-	}	
-	swap(&array[i+1], &array[high]);
-	return (i+1);
-}
-
-
-void ofApp::quickSort(int array[], int low, int high){
-	if(low<high){
-		int partI = partition(array, low, high);
-		quickSort(array, low, partI - 1);
-		quickSort(array, partI + 1, high);
-
-	}
-
-}
