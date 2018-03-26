@@ -33,8 +33,10 @@ class ofApp : public ofBaseApp{
 		void swap(int* a, int* b);
 		int partition(int arr[], int low, int high);
 		void quickSort(int arr[], int low, int high);
-		void findClosestSpot(int myDepth[]);
-		void filterNoise(int myDepth[]);
+		void findClosestSpot();
+		void filterNoise();
+		void detectHand();
+		void treshold();
 
 	ofxPanel panel;
     
@@ -50,8 +52,9 @@ class ofApp : public ofBaseApp{
 	*/
 
 	int myDepth[217088];
+	int myBinary[WIDTH*HEIGHT];
 	int medianNeigh[9];
-	int closestSpot[(WIDTH*HEIGHT)/9][2]; 
+	int closestSpot[(WIDTH*HEIGHT)/4][2]; 
 	int sizeOfHand;	
 	int timer;
 //	int h;

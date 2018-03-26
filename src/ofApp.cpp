@@ -6,6 +6,7 @@
 
 #define loopX(x) for(int x = 0; x < WIDTH-1; x++)
 #define loopY(y) for(int y = 0; y < HEIGHT-1; y++)
+#define index(i,j) (j*WIDTH + i)
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -37,7 +38,7 @@ void ofApp::setup(){
 
 	fbo.allocate(512,424,GL_RGBA,4);//GL_LUMINANCE);
 
-	foundHand = false;   
+//	foundHand = false;   
 
 	fbo.begin();
 	ofClear(0.0f,0.0f,0.0f,0.0f);//255,255,255,0);
@@ -63,7 +64,7 @@ void ofApp::update(){
 			//load picture into own array
 			loopX(x){
 				loopY(y){
-					myDepth[y*WIDTH + x] = getDepth[y*WIDTH + x];
+					myDepth[index(x,y)] = getDepth[index(x,y)];
 				//	printf("%d\t",myDepth[y*WIDTH +x]);
 				}
 			}
@@ -74,33 +75,10 @@ void ofApp::update(){
 //			howLong = timeEnd-timeStart;
 //			printf("howLong: %f\n", howLong);
 
-			filterNoise(myDepth);
-			findClosestSpot(myDepth);
-
-			printf("sizeOfHand: %d \n", sizeOfHand);
-			printf("closest depth: %d \n", closestDepth);
-			for(int k = 0; k < sizeOfHand-1; k++){
-			//	printf("i: %d\t j: %d\n",closestSpot[k][0],closestSpot[k][1]);
-			}
-
-//	contourFinder.findContours(texDepth,0,50,0,false,true);
-			Xavg = 0;
-			Yavg = 0;
-			if(sizeOfHand > 0){
-				for(int i = 0; i < sizeOfHand; i++){
-					if(closestSpot[i][0] != -1){ 	//just to be sure
-						Xavg+=(closestSpot[i][0]);
-						Yavg+=(closestSpot[i][1]);
-					}
-				}
-	
-				Xavg /= sizeOfHand;
-				Yavg /= sizeOfHand;
-				printf("Xavg: %d \t Yavg: %d \n", Xavg,Yavg);
-				/*coord. system is (-256,256)x(-212,212)*/
-				Xavg -= 255;
-				Yavg -=212;
-			}
+			filterNoise();
+			findClosestSpot();
+			treshold();
+			detectHand();
 
 		} //end for time partition
 	} //end for if isFrameNew
@@ -125,11 +103,18 @@ void ofApp::draw(){
 //	ofDrawBox(-100,-100,0,50);
 	int r = (sizeOfHand > 100) ? (100) : 50;
 	ofSetLineWidth(3);	
-	ofDrawBox(Xavg,Yavg,0,r,r,5);
+	if(foundHand){
+		ofDrawBox(Xavg,Yavg,0,r,r,5);
+	}
 	//ofDrawBox(-5,-33,0,r,r,5);
 
-
-
+/*	loopX(i){
+		loopY(j){
+			if(myBinary[index(i,j)] == 1){
+				ofDrawSphere(closestSpot[i][0]-255, closestSpot[i][1]-212,3);
+			}
+		}
+	}*/
 /*	for(int i = 0; i < sizeOfHand; i++){
 		ofDrawSphere((closestSpot[i][0]-256),(closestSpot[i][1]-212),5);
 	}*/
@@ -158,54 +143,42 @@ void ofApp::draw(){
 * Find closest spot according to depth data.
 *
 */
-void ofApp::findClosestSpot(int myDepth[]){
+void ofApp::findClosestSpot(){
 	closestDepth = -1;
 	sizeOfHand = 0;
-	printf("--start searching \n");
+//	printf("--start searching \n");
 	int temp;
 	closestDepth = *std::max_element(myDepth, myDepth+WIDTH*HEIGHT);	
-//	std::cout << *std::max_element(myDepth, myDepth+WIDTH*HEIGHT) << std::endl;
 	
 	loopX(i){
 		loopY(j){
 	//		int temp = getDepth[j*WIDTH + i];
-	//		myDepth[j*WIDTH + i] = temp;	
-			temp = myDepth[j*WIDTH + i];
+			temp = myDepth[index(i,j)];
+		//	if(i == 200 && j == 50)
 			//printf("myDepth %d \t",myDepth[j*WIDTH + i]);
 			if(temp == closestDepth){
 				//printf("closestDepth: %d \t temp: %d \n", closestDepth, temp);
-				if(sizeOfHand < (WIDTH*HEIGHT)/9){
+				if(sizeOfHand < (WIDTH*HEIGHT)/4){
 					closestSpot[sizeOfHand][0] = i;
 					closestSpot[sizeOfHand][1] = j;
 					sizeOfHand++;
-					//Hand found=true?
+					foundHand = true;
 				}else{
-					foundHand = false;
+				//	foundHand = false;
 				//	printf("---NOT HAND---");
 				}
 			 }
-			/*else if(temp > closestDepth){
-				closestDepth = temp;
-			//	printf("temp = %d \t closestDepth = %d\n", temp, closestDepth);
-				//printf("i: %d \t j: %d \t closestDepth: %d\n",i,j,closestDepth);
-				for(int k = sizeOfHand; k > -1; k--){
-					closestSpot[k][0] = -1;
-					closestSpot[k][1] = -1;
-				}
-				closestSpot[0][0] = i;
-				closestSpot[0][1] = j;
-				sizeOfHand = 1;	
-			}	*/	
 		}
    	}
-	printf("--search done\n");
+//	printf("--search done\n");
 }
+
 /*
 * Filter noise from picture (at least some of it) with median filter.
 * Median is calculated from size defined NEIGHBORHOOD.
 */
-void ofApp::filterNoise(int myDepth[]){
-	printf("--filter started\n");
+void ofApp::filterNoise(){
+//	printf("--filter started\n");
 	int arr[NEIGHBORHOOD];
 	int m;
 	int offset = NEIGHBORHOOD/9; 
@@ -217,24 +190,69 @@ void ofApp::filterNoise(int myDepth[]){
 			if(l > 0 && l < 423 && k > 0 && k < 511){ 
 				for(int n = k-offset; n < k+offset; n++){
 					for(int o = l-offset; o < l+offset; o++){
-						arr[m] = myDepth[o*WIDTH + n];
+						arr[m] = myDepth[index(n,o)];
 						m++;
 					}
 				}
 				quickSort(arr, 0, 8);
-				myDepth[l*WIDTH + k] = arr[4];
+				myDepth[index(k,l)] = arr[4];
 			}
 				
 		 }
 	}
-	printf("--done filter\n");
+//	printf("--done filter\n");
 }
+
+void ofApp::detectHand(){			
+//	printf(foundHand?"found\n":"not found\n");
+	if(foundHand){
+		printf("sizeOfHand: %d \n", sizeOfHand);
+		printf("closest depth: %d \n", closestDepth);
+		for(int k = 0; k < sizeOfHand-1; k++){
+		//	printf("i: %d\t j: %d\n",closestSpot[k][0],closestSpot[k][1]);
+		}
+
+//	contourFinder.findContours(texDepth,0,50,0,false,true);
+		Xavg = 0;
+		Yavg = 0;
+		
+		if(sizeOfHand > 0){
+			for(int i = 0; i < sizeOfHand; i++){
+				if(closestSpot[i][0] != -1){ 	//just to be sure
+					Xavg+=(closestSpot[i][0]);
+					Yavg+=(closestSpot[i][1]);
+				}
+			}
+	
+			Xavg /= sizeOfHand;
+			Yavg /= sizeOfHand;
+			printf("Xavg: %d \t Yavg: %d \n", Xavg,Yavg);
+			/*coord. system is (-256,256)x(-212,212)*/
+			Xavg -= 255;
+			Yavg -=212;
+		}
+	}
+}
+
+/*
+* Create my binary image, where 1 is pixel with closest value
+*/
+void ofApp::treshold(){
+	loopX(i){
+		loopY(j){
+			myBinary[index(i,j)]= (myDepth[index(i,j)]==closestDepth) ? 1 : 0;
+		//	printf((myBinary[index(i,j)])? "." : " ");
+		}
+		//printf("\n");
+	}
+}
+
+
 
 /*
 * quick sort from 
 * https://www.geeksforgeeks.org/quick-sort/
 */
-
 void ofApp::swap(int* a, int* b){
 	int temp = *a;
 	*a = *b;
