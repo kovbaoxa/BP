@@ -8,6 +8,7 @@
 #define WIDTH 512
 #define HEIGHT 424
 #define NEIGHBORHOOD 9 //has to be devisible by 9 for calculating median filter
+#define NEIGH_OFFSET (NEIGHBORHOOD/9) //for calculating of coordinates
 
 
 //#define MOVES_IN_HIST
@@ -37,6 +38,8 @@ class ofApp : public ofBaseApp{
 		void filterNoise();
 		void detectHand();
 		void treshold();
+		void findInBinary();
+		void printArray(int arr[]);
 
 	ofxPanel panel;
     
@@ -51,8 +54,9 @@ class ofApp : public ofBaseApp{
 	* 20 000 px could be more than enough for now
 	*/
 
-	int myDepth[217088];
-	int myBinary[WIDTH*HEIGHT];
+	int myDepth[217088] = { };
+	int backupDepth[217088] = { };
+	int myBinary[WIDTH*HEIGHT] = { };
 	int medianNeigh[9];
 	int closestSpot[(WIDTH*HEIGHT)/4][2]; 
 	int sizeOfHand;	
@@ -61,6 +65,7 @@ class ofApp : public ofBaseApp{
 //	int w;
 	int Xavg;
 	int Yavg;	
+	int index;
 
 	float howLong;
 	float timeStart;

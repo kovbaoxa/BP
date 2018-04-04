@@ -6,7 +6,7 @@
 
 #define loopX(x) for(int x = 0; x < WIDTH-1; x++)
 #define loopY(y) for(int y = 0; y < HEIGHT-1; y++)
-#define index(i,j) (j*WIDTH + i)
+#define index(i,j) (j*(WIDTH-1) + i)
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -56,16 +56,18 @@ void ofApp::update(){
 		getDepth = kinects[0]->getDepthPixels();
 		ofTexture depth = texDepth[0];
 
-//		sizeOfHand = 0;
+		sizeOfHand = 0;
 //		closestDepth = -1; // some not reachable value in case hand get further 
 		if((int)ofGetElapsedTimef()%5==0){
-			printf("NEW UPDATE \t time: %f \n", ofGetElapsedTimef());
-
+			printf("\n NEW UPDATE \t time: %f \n", ofGetElapsedTimef());
+		//	sizeOfHand = 0;
 			//load picture into own array
 			loopX(x){
 				loopY(y){
-					myDepth[index(x,y)] = getDepth[index(x,y)];
+					index = index(x,y);
+					myDepth[index] = getDepth[index];
 				//	printf("%d\t",myDepth[y*WIDTH +x]);
+					backupDepth[index] = getDepth[index];
 				}
 			}
 
@@ -74,10 +76,17 @@ void ofApp::update(){
 		//			timeEnd = ofGetElapsedTimef();
 //			howLong = timeEnd-timeStart;
 //			printf("howLong: %f\n", howLong);
+			
 
+			printf("backupDepth\n");
+			printArray(backupDepth);
 			filterNoise();
-			findClosestSpot();
+			printf("AFTER FILTER\n");
+
+			printArray(myDepth);
 			treshold();
+			//findClosestSpot();
+			findInBinary();
 			detectHand();
 
 		} //end for time partition
@@ -104,6 +113,7 @@ void ofApp::draw(){
 	int r = (sizeOfHand > 100) ? (100) : 50;
 	ofSetLineWidth(3);	
 	if(foundHand){
+
 		ofDrawBox(Xavg,Yavg,0,r,r,5);
 	}
 	//ofDrawBox(-5,-33,0,r,r,5);
@@ -163,6 +173,41 @@ void ofApp::findClosestSpot(){
 					closestSpot[sizeOfHand][1] = j;
 					sizeOfHand++;
 					foundHand = true;
+				}else if(sizeOfHand==0){
+					foundHand = false;
+				//	foundHand = false;
+				//	printf("---NOT HAND---");
+				}
+			 }
+		}
+   	}
+//	printf("--search done\n");
+}
+
+/*
+* Find closest spot according to depth data from binary image.
+*
+*/
+void ofApp::findInBinary(){
+	closestDepth = -1;
+	sizeOfHand = 0;
+//	printf("--start searching \n");
+	int temp;
+	closestDepth = *std::max_element(myDepth, myDepth+WIDTH*HEIGHT);	
+	
+	loopX(i){
+		loopY(j){
+	//		int temp = getDepth[j*WIDTH + i];
+			temp = myBinary[index(i,j)];
+		//	if(i == 200 && j == 50)
+			//printf("myDepth %d \t",myDepth[j*WIDTH + i]);
+			if(temp == 1){
+				//printf("closestDepth: %d \t temp: %d \n", closestDepth, temp);
+				if(sizeOfHand < (WIDTH*HEIGHT)/4){
+					closestSpot[sizeOfHand][0] = i;
+					closestSpot[sizeOfHand][1] = j;
+					sizeOfHand++;
+					foundHand = true;
 				}else{
 				//	foundHand = false;
 				//	printf("---NOT HAND---");
@@ -181,23 +226,32 @@ void ofApp::filterNoise(){
 //	printf("--filter started\n");
 	int arr[NEIGHBORHOOD];
 	int m;
-	int offset = NEIGHBORHOOD/9; 
-
 	loopX(k){
 		loopY(l){
 			m = 0;
 			//leave outer pixels out of blurring
-			if(l > 0 && l < 423 && k > 0 && k < 511){ 
-				for(int n = k-offset; n < k+offset; n++){
-					for(int o = l-offset; o < l+offset; o++){
-						arr[m] = myDepth[index(n,o)];
+			if(l > 0 && l < 423 && k > 0 && k < 511){  //TODO: dynamic numbering
+				for(int n = k-NEIGH_OFFSET; n < k+NEIGH_OFFSET+1; n++){
+					for(int o = l-NEIGH_OFFSET; o < l+NEIGH_OFFSET+1; o++){
+						arr[m] = backupDepth[index(n,o)];
 						m++;
 					}
 				}
+			/*	for(int i = 0; i < 9; i++){
+					printf("%d,", arr[i]);
+				}
+				printf(":\n");
+			*/	
 				quickSort(arr, 0, 8);
+			/*	for(int i = 0; i < 9; i++){
+					printf("%d,", arr[i]);
+				}
+				printf("::\n");
+				printf(">%d, %d\n", myDepth[index(k, l)], arr[4]);*/
 				myDepth[index(k,l)] = arr[4];
 			}
-				
+
+			
 		 }
 	}
 //	printf("--done filter\n");
@@ -243,11 +297,19 @@ void ofApp::treshold(){
 			myBinary[index(i,j)]= (myDepth[index(i,j)]==closestDepth) ? 1 : 0;
 		//	printf((myBinary[index(i,j)])? "." : " ");
 		}
-		//printf("\n");
+	//	printf("\n");
 	}
+//	printArray(myBinary);
 }
 
-
+void ofApp::printArray(int arr[]){
+	for(int i = 0; i < 60; i++){
+		for(int j = 0; j < 60; j++){
+			printf("%d ", arr[index(i,j)]);
+		}
+		printf("\n");
+	}
+}
 
 /*
 * quick sort from 
