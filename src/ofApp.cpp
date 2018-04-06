@@ -58,7 +58,7 @@ void ofApp::update(){
 
 		sizeOfHand = 0;
 //		closestDepth = -1; // some not reachable value in case hand get further 
-		if((int)ofGetElapsedTimef()%5==0){
+		if(ofGetFrameNum()%60){//(int)ofGetElapsedTimef()%5==0){
 			printf("\n NEW UPDATE \t time: %f \n", ofGetElapsedTimef());
 		//	sizeOfHand = 0;
 			//load picture into own array
@@ -78,16 +78,19 @@ void ofApp::update(){
 //			printf("howLong: %f\n", howLong);
 			
 
-			printf("backupDepth\n");
-			printArray(backupDepth);
+	//		printf("backupDepth\n");
+		//	printArray(backupDepth);
 			filterNoise();
-			printf("AFTER FILTER\n");
+	//		printf("AFTER FILTER\n");
 
-			printArray(myDepth);
+		//	printArray(myDepth);
 			treshold();
 			//findClosestSpot();
 			findInBinary();
 			detectHand();
+			findSquare();
+		//	printArray(myBinary);
+
 
 		} //end for time partition
 	} //end for if isFrameNew
@@ -113,8 +116,15 @@ void ofApp::draw(){
 	int r = (sizeOfHand > 100) ? (100) : 50;
 	ofSetLineWidth(3);	
 	if(foundHand){
-
 		ofDrawBox(Xavg,Yavg,0,r,r,5);
+	}
+	ofSetColor(0,255,0);
+	ofDrawBox(255,212,0, 50,50,5);
+	r = max_of_M/2;
+	if((max_i != 0) & (max_j != 0)){
+		ofSetColor(0,0,255);
+		ofDrawBox((max_i-r)-255, (max_j-r)-212, 0, r, r, 5);	
+
 	}
 	//ofDrawBox(-5,-33,0,r,r,5);
 
@@ -287,6 +297,71 @@ void ofApp::detectHand(){
 		}
 	}
 }
+
+
+/*
+* Going through binary image and looking for biggest square.
+* inspired by https://www.geeksforgeeks.org/maximum-size-sub-matrix-with-all-1s-in-a-binary-matrix/
+*/
+void ofApp::findSquare(){
+
+//	int R = WIDTH;
+//	int C = HEIGHT;
+
+	int i,j;
+	int M[WIDTH][HEIGHT];
+	max_of_M = 0;
+	max_i = 0;
+	max_j = 0;
+
+	for(i = 0; i < WIDTH; i++){
+		M[i][0] = myBinary[index(i,0)];
+	}
+	for(j = 0; j < HEIGHT; j++){
+		M[0][j] = myBinary[index(0,j)];
+	}	
+	
+	for(i = 1; i < WIDTH; i++){
+		for(j = 1; j < HEIGHT; j++){
+			if(myBinary[index(i,j)] == 0){
+				M[i][j] = 0;
+			}else{
+				M[i][j] = int (findMin(M[i][j-1], M[i-1][j], M[i-1][j-1]) + 1);
+			//	printf("%d\t %d %d %d\n", M[i][j], myBinary[index(i, j-1)], myBinary[index(i-1,j)], myBinary[index(i-1,j-1)]);
+			}
+		}
+	}
+
+	for(i = 0; i < WIDTH-1; i++){
+		for(j = 0; j < HEIGHT-1; j++){
+			//printf("%d ", M[i][j]);
+			if(M[i][j] > max_of_M){
+				max_of_M = M[i][j];
+				max_i = i;
+				max_j = j;
+			}
+		}
+	//	printf("\n");
+	}
+	printf("max_i: %d\t max_j: %d\t max_of_M: %d\n", max_i, max_j, max_of_M);
+
+	
+
+}
+
+int ofApp::findMin(int a, int b, int c){
+
+	int min = a;
+	if(b < min){
+		min = b;
+	}
+	if(c < min){
+		min = c;
+	}
+	return min;
+}
+
+
 
 /*
 * Create my binary image, where 1 is pixel with closest value

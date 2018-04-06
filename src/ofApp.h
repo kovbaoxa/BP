@@ -40,6 +40,8 @@ class ofApp : public ofBaseApp{
 		void treshold();
 		void findInBinary();
 		void printArray(int arr[]);
+		void findSquare();
+		int findMin(int a, int b, int c);
 
 	ofxPanel panel;
     
@@ -54,8 +56,8 @@ class ofApp : public ofBaseApp{
 	* 20 000 px could be more than enough for now
 	*/
 
-	int myDepth[217088] = { };
-	int backupDepth[217088] = { };
+	int myDepth[WIDTH*HEIGHT] = { };
+	int backupDepth[WIDTH*HEIGHT] = { };
 	int myBinary[WIDTH*HEIGHT] = { };
 	int medianNeigh[9];
 	int closestSpot[(WIDTH*HEIGHT)/4][2]; 
@@ -66,6 +68,12 @@ class ofApp : public ofBaseApp{
 	int Xavg;
 	int Yavg;	
 	int index;
+
+	int M[WIDTH][HEIGHT];
+	int max_of_M = 0;
+	int max_i = 0;
+	int max_j = 0;
+
 
 	float howLong;
 	float timeStart;
