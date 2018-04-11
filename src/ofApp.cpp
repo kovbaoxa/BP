@@ -1,12 +1,8 @@
 #include "ofApp.h"
 
-//#define WIDTH 512
-//#define HEIGHT 424
-//#define NEIGHBORHOOD 9	// HAS TO BE DEVISIBLE BY 9 for calculating median filter
-
-#define loopX(x) for(int x = 0; x < WIDTH-1; x++)
-#define loopY(y) for(int y = 0; y < HEIGHT-1; y++)
-#define index(i,j) (j*(WIDTH-1) + i)
+#define loopX(x) for(int x = 0; x < HEIGHT ; x++)
+#define loopY(y) for(int y = 0; y < WIDTH; y++)
+#define index(i,j) (i*(WIDTH) + j)
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -58,9 +54,8 @@ void ofApp::update(){
 
 		sizeOfHand = 0;
 //		closestDepth = -1; // some not reachable value in case hand get further 
-		if(ofGetFrameNum()%60){//(int)ofGetElapsedTimef()%5==0){
+		if(ofGetFrameNum()%180){//(int)ofGetElapsedTimef()%5==0){
 			printf("\n NEW UPDATE \t time: %f \n", ofGetElapsedTimef());
-		//	sizeOfHand = 0;
 			//load picture into own array
 			loopX(x){
 				loopY(y){
@@ -78,18 +73,21 @@ void ofApp::update(){
 //			printf("howLong: %f\n", howLong);
 			
 
-	//		printf("backupDepth\n");
-		//	printArray(backupDepth);
+			printf("backupDepth\n");
+			printArray(backupDepth);
 			filterNoise();
-	//		printf("AFTER FILTER\n");
+			printf("AFTER FILTER\n");
 
-		//	printArray(myDepth);
+			printArray(myDepth);
 			treshold();
 			//findClosestSpot();
 			findInBinary();
 			detectHand();
 			findSquare();
-		//	printArray(myBinary);
+
+			
+			printf("BINARY\n");
+			printArray(myBinary);
 
 
 		} //end for time partition
@@ -116,10 +114,10 @@ void ofApp::draw(){
 	int r = (sizeOfHand > 100) ? (100) : 50;
 	ofSetLineWidth(3);	
 	if(foundHand){
-		ofDrawBox(Xavg,Yavg,0,r,r,5);
+		ofDrawBox(WIDTH-(Xavg*2),Yavg/2,0,r,r,5);
 	}
-	ofSetColor(0,255,0);
-	ofDrawBox(255,212,0, 50,50,5);
+	//ofSetColor(0,255,0);
+	//ofDrawBox(255,212,0, 50,50,5);
 	r = max_of_M/2;
 	if((max_i != 0) & (max_j != 0)){
 		ofSetColor(0,0,255);
@@ -240,7 +238,7 @@ void ofApp::filterNoise(){
 		loopY(l){
 			m = 0;
 			//leave outer pixels out of blurring
-			if(l > 0 && l < 423 && k > 0 && k < 511){  //TODO: dynamic numbering
+			if(l > 0 && l < WIDTH-1  && k > 0 && k < HEIGHT-1){  
 				for(int n = k-NEIGH_OFFSET; n < k+NEIGH_OFFSET+1; n++){
 					for(int o = l-NEIGH_OFFSET; o < l+NEIGH_OFFSET+1; o++){
 						arr[m] = backupDepth[index(n,o)];
@@ -285,15 +283,17 @@ void ofApp::detectHand(){
 				if(closestSpot[i][0] != -1){ 	//just to be sure
 					Xavg+=(closestSpot[i][0]);
 					Yavg+=(closestSpot[i][1]);
+				//	printf("count of points: %d\t sum:%d\n")		
+				//	printf("sum%d\n",Xavg);
 				}
 			}
-	
+			
 			Xavg /= sizeOfHand;
 			Yavg /= sizeOfHand;
 			printf("Xavg: %d \t Yavg: %d \n", Xavg,Yavg);
 			/*coord. system is (-256,256)x(-212,212)*/
-			Xavg -= 255;
-			Yavg -=212;
+		//	Xavg -= 255;
+		//	Yavg -=212;
 		}
 	}
 }
@@ -315,14 +315,14 @@ void ofApp::findSquare(){
 	max_j = 0;
 
 	for(i = 0; i < WIDTH; i++){
-		M[i][0] = myBinary[index(i,0)];
+		M[i][0] = myBinary[i];
 	}
 	for(j = 0; j < HEIGHT; j++){
-		M[0][j] = myBinary[index(0,j)];
+		M[0][j] = myBinary[j*WIDTH];
 	}	
 	
-	for(i = 1; i < WIDTH; i++){
-		for(j = 1; j < HEIGHT; j++){
+	for(i = 1; i < HEIGHT; i++){
+		for(j = 1; j < WIDTH; j++){
 			if(myBinary[index(i,j)] == 0){
 				M[i][j] = 0;
 			}else{
@@ -332,8 +332,8 @@ void ofApp::findSquare(){
 		}
 	}
 
-	for(i = 0; i < WIDTH-1; i++){
-		for(j = 0; j < HEIGHT-1; j++){
+	for(i = 0; i < WIDTH; i++){
+		for(j = 0; j < HEIGHT; j++){
 			//printf("%d ", M[i][j]);
 			if(M[i][j] > max_of_M){
 				max_of_M = M[i][j];
@@ -369,7 +369,7 @@ int ofApp::findMin(int a, int b, int c){
 void ofApp::treshold(){
 	loopX(i){
 		loopY(j){
-			myBinary[index(i,j)]= (myDepth[index(i,j)]==closestDepth) ? 1 : 0;
+			myBinary[index(i,j)]= (myDepth[index(i,j)]>(closestDepth-5)) ? 1 : 0;
 		//	printf((myBinary[index(i,j)])? "." : " ");
 		}
 	//	printf("\n");
@@ -378,13 +378,19 @@ void ofApp::treshold(){
 }
 
 void ofApp::printArray(int arr[]){
-	for(int i = 0; i < 60; i++){
-		for(int j = 0; j < 60; j++){
+	loopX(i){
+		loopY(j){
 			printf("%d ", arr[index(i,j)]);
 		}
 		printf("\n");
 	}
 }
+
+//void ofApp::flip(){
+
+//	myDepth
+
+//}
 
 /*
 * quick sort from 
@@ -420,6 +426,7 @@ void ofApp::quickSort(int array[], int low, int high){
 	}
 
 }
+
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
 

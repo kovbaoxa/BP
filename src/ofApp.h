@@ -59,12 +59,11 @@ class ofApp : public ofBaseApp{
 	int myDepth[WIDTH*HEIGHT] = { };
 	int backupDepth[WIDTH*HEIGHT] = { };
 	int myBinary[WIDTH*HEIGHT] = { };
-	int medianNeigh[9];
+	int medianNeigh[NEIGHBORHOOD];
 	int closestSpot[(WIDTH*HEIGHT)/4][2]; 
 	int sizeOfHand;	
 	int timer;
-//	int h;
-//	int w;
+
 	int Xavg;
 	int Yavg;	
 	int index;
@@ -80,12 +79,11 @@ class ofApp : public ofBaseApp{
 	float timeEnd;
 	int offsetDepth;
 
-	ofFbo fbo;    
+	ofFbo fbo;
         vector <ofTexture> texDepth;
         vector <ofTexture> texRGB;
 	
 	bool foundHand;
-//	int coor [MOVES_IN_HIST][3];
 	int closestDepth;
 
 };
