@@ -7,7 +7,7 @@
 
 #define WIDTH 512
 #define HEIGHT 424
-#define NEIGHBORHOOD 9 //has to be devisible by 9 for calculating median filter
+#define NEIGHBORHOOD 9 // can be 9 (neighborhoor 3x3) or 25 (neighborhood 5x5)
 #define NEIGH_OFFSET (NEIGHBORHOOD/9) //for calculating of coordinates
 
 

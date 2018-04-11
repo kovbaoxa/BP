@@ -73,12 +73,12 @@ void ofApp::update(){
 //			printf("howLong: %f\n", howLong);
 			
 
-			printf("backupDepth\n");
-			printArray(backupDepth);
+	//		printf("backupDepth\n");
+	//		printArray(backupDepth);
 			filterNoise();
-			printf("AFTER FILTER\n");
+	//		printf("AFTER FILTER\n");
 
-			printArray(myDepth);
+	//		printArray(myDepth);
 			treshold();
 			//findClosestSpot();
 			findInBinary();
@@ -86,8 +86,8 @@ void ofApp::update(){
 			findSquare();
 
 			
-			printf("BINARY\n");
-			printArray(myBinary);
+	//		printf("BINARY\n");
+	//		printArray(myBinary);
 
 
 		} //end for time partition
@@ -113,15 +113,15 @@ void ofApp::draw(){
 //	ofDrawBox(-100,-100,0,50);
 	int r = (sizeOfHand > 100) ? (100) : 50;
 	ofSetLineWidth(3);	
-	if(foundHand){
-		ofDrawBox(WIDTH-(Xavg*2),Yavg/2,0,r,r,5);
+	if(sizeOfHand > 10){
+		ofDrawBox((Xavg-255),Yavg-212,0,r,r,5);
 	}
 	//ofSetColor(0,255,0);
 	//ofDrawBox(255,212,0, 50,50,5);
 	r = max_of_M/2;
 	if((max_i != 0) & (max_j != 0)){
 		ofSetColor(0,0,255);
-		ofDrawBox((max_i-r)-255, (max_j-r)-212, 0, r, r, 5);	
+		ofDrawBox((max_i-r)-255, (max_j-r)-212, 0, max_of_M, max_of_M, 5);	
 
 	}
 	//ofDrawBox(-5,-33,0,r,r,5);
@@ -212,8 +212,8 @@ void ofApp::findInBinary(){
 			if(temp == 1){
 				//printf("closestDepth: %d \t temp: %d \n", closestDepth, temp);
 				if(sizeOfHand < (WIDTH*HEIGHT)/4){
-					closestSpot[sizeOfHand][0] = i;
-					closestSpot[sizeOfHand][1] = j;
+					closestSpot[sizeOfHand][0] = j;
+					closestSpot[sizeOfHand][1] = i;
 					sizeOfHand++;
 					foundHand = true;
 				}else{
@@ -267,17 +267,14 @@ void ofApp::filterNoise(){
 
 void ofApp::detectHand(){			
 //	printf(foundHand?"found\n":"not found\n");
-	if(foundHand){
+	if(sizeOfHand>10){
 		printf("sizeOfHand: %d \n", sizeOfHand);
 		printf("closest depth: %d \n", closestDepth);
-		for(int k = 0; k < sizeOfHand-1; k++){
-		//	printf("i: %d\t j: %d\n",closestSpot[k][0],closestSpot[k][1]);
-		}
 
 //	contourFinder.findContours(texDepth,0,50,0,false,true);
 		Xavg = 0;
 		Yavg = 0;
-		
+
 		if(sizeOfHand > 0){
 			for(int i = 0; i < sizeOfHand; i++){
 				if(closestSpot[i][0] != -1){ 	//just to be sure
@@ -287,7 +284,7 @@ void ofApp::detectHand(){
 				//	printf("sum%d\n",Xavg);
 				}
 			}
-			
+
 			Xavg /= sizeOfHand;
 			Yavg /= sizeOfHand;
 			printf("Xavg: %d \t Yavg: %d \n", Xavg,Yavg);
@@ -305,21 +302,18 @@ void ofApp::detectHand(){
 */
 void ofApp::findSquare(){
 
-//	int R = WIDTH;
-//	int C = HEIGHT;
-
 	int i,j;
-	int M[WIDTH][HEIGHT];
+	int M[HEIGHT][WIDTH];
 	max_of_M = 0;
 	max_i = 0;
 	max_j = 0;
 
-	for(i = 0; i < WIDTH; i++){
-		M[i][0] = myBinary[i];
+	for(i = 0; i < HEIGHT; i++){
+		M[i][0] = myBinary[i*WIDTH];
 	}
-	for(j = 0; j < HEIGHT; j++){
-		M[0][j] = myBinary[j*WIDTH];
-	}	
+	for(j = 0; j < WIDTH; j++){
+		M[0][j] = myBinary[j];
+	}
 	
 	for(i = 1; i < HEIGHT; i++){
 		for(j = 1; j < WIDTH; j++){
@@ -332,18 +326,18 @@ void ofApp::findSquare(){
 		}
 	}
 
-	for(i = 0; i < WIDTH; i++){
-		for(j = 0; j < HEIGHT; j++){
+	for(i = 0; i < HEIGHT; i++){
+		for(j = 0; j < WIDTH; j++){
 			//printf("%d ", M[i][j]);
 			if(M[i][j] > max_of_M){
 				max_of_M = M[i][j];
-				max_i = i;
-				max_j = j;
+				max_j = i;
+				max_i = j;
 			}
 		}
 	//	printf("\n");
 	}
-	printf("max_i: %d\t max_j: %d\t max_of_M: %d\n", max_i, max_j, max_of_M);
+	printf("max_x: %d\t max_y: %d\t max_of_M: %d\n", max_i, max_j, max_of_M);
 
 	
 
@@ -369,7 +363,7 @@ int ofApp::findMin(int a, int b, int c){
 void ofApp::treshold(){
 	loopX(i){
 		loopY(j){
-			myBinary[index(i,j)]= (myDepth[index(i,j)]>(closestDepth-5)) ? 1 : 0;
+			myBinary[index(i,j)]= (myDepth[index(i,j)]>(closestDepth-10)) ? 1 : 0;
 		//	printf((myBinary[index(i,j)])? "." : " ");
 		}
 	//	printf("\n");
