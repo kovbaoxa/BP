@@ -42,6 +42,9 @@ class ofApp : public ofBaseApp{
 		void printArray(int arr[]);
 		void findSquare();
 		int findMin(int a, int b, int c);
+		void searchFingerBlocks();
+		void findFingerTip(int a, int x1, int x2, int y1, int y2);
+
 
 	ofxPanel panel;
     
@@ -60,7 +63,7 @@ class ofApp : public ofBaseApp{
 	int backupDepth[WIDTH*HEIGHT] = { };
 	int myBinary[WIDTH*HEIGHT] = { };
 	int medianNeigh[NEIGHBORHOOD];
-	int closestSpot[(WIDTH*HEIGHT)/4][2]; 
+	int closestSpot[(WIDTH*HEIGHT)/9][2]; 
 	int sizeOfHand;	
 	int timer;
 
@@ -86,4 +89,5 @@ class ofApp : public ofBaseApp{
 	bool foundHand;
 	int closestDepth;
 
+	int fingers[5][2];
 };

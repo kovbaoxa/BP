@@ -54,7 +54,7 @@ void ofApp::update(){
 
 		sizeOfHand = 0;
 //		closestDepth = -1; // some not reachable value in case hand get further 
-		if(ofGetFrameNum()%180){//(int)ofGetElapsedTimef()%5==0){
+		//if(ofGetFrameNum()%2==0){//(int)ofGetElapsedTimef()%5==0){
 			printf("\n NEW UPDATE \t time: %f \n", ofGetElapsedTimef());
 			//load picture into own array
 			loopX(x){
@@ -84,13 +84,13 @@ void ofApp::update(){
 			findInBinary();
 			detectHand();
 			findSquare();
+			searchFingerBlocks();
 
-			
 	//		printf("BINARY\n");
 	//		printArray(myBinary);
 
 
-		} //end for time partition
+	//	} //end for time partition
 	} //end for if isFrameNew
 
 	
@@ -112,7 +112,7 @@ void ofApp::draw(){
 	ofSetColor(255,0,0);
 //	ofDrawBox(-100,-100,0,50);
 	int r = (sizeOfHand > 100) ? (100) : 50;
-	ofSetLineWidth(3);	
+	ofSetLineWidth(5);	
 	if(sizeOfHand > 10){
 		ofDrawBox((Xavg-255),Yavg-212,0,r,r,5);
 	}
@@ -120,10 +120,16 @@ void ofApp::draw(){
 	//ofDrawBox(255,212,0, 50,50,5);
 	r = max_of_M/2;
 	if((max_i != 0) & (max_j != 0)){
-		ofSetColor(0,0,255);
+		ofSetColor(0,255,255);
+		ofSetLineWidth(8);		
 		ofDrawBox((max_i-r)-255, (max_j-r)-212, 0, max_of_M, max_of_M, 5);	
 
 	}
+	for(int i = 0; i < 4; i++){
+		ofDrawSphere(fingers[i][0]-255, fingers[i][1]-212, max_of_M/4);
+	}
+
+
 	//ofDrawBox(-5,-33,0,r,r,5);
 
 /*	loopX(i){
@@ -372,6 +378,7 @@ void ofApp::treshold(){
 }
 
 void ofApp::printArray(int arr[]){
+
 	loopX(i){
 		loopY(j){
 			printf("%d ", arr[index(i,j)]);
@@ -379,6 +386,52 @@ void ofApp::printArray(int arr[]){
 		printf("\n");
 	}
 }
+
+
+/*
+* Identify blocks, where fingers should be. 
+*
+*/
+void ofApp::searchFingerBlocks(){
+
+	int x_start, x_end, y_start, y_end;
+
+	y_start = max_j - 3*max_of_M;
+	y_end = max_j - max_of_M;
+
+	for(int a = 1; a < 5; a++){
+		x_start = max_i - a*(max_of_M/4);
+		x_end = x_start + max_of_M/4;
+		findFingerTip(a, x_start, x_end, y_start, y_end);
+	} 
+}
+
+/*
+* Search blocks with fingers for local maxima, which should be finger tips. (TODO: if too short?)
+* a is index of finger, (x_start, x_end) is range of x coordinates, (y_start, y_end) is range of y coordinates
+*/
+void ofApp::findFingerTip(int a, int x_start, int x_end, int y_start, int y_end){
+
+	int localMax_x = 0;
+	int localMax_y = y_end;
+	printf("y_start: %d\t y_end: %d\t x_start: %d\t x_end: %d\t", y_start, y_end, x_start, x_end );	
+
+
+	for(int i = y_start; i < y_end; i++){
+		for(int j = x_start; j < x_end; j++){
+			if(myBinary[index(i,j)] == 1){
+				if (i < localMax_y){
+					localMax_y = i;
+					localMax_x = j;
+				}
+			}
+		}
+	}
+	fingers[a][0] = localMax_x;
+	fingers[a][1] = localMax_y;
+	printf("FINGER No. %d\t x: %d\t y: %d\t\n",a ,localMax_x ,localMax_y);
+}
+
 
 //void ofApp::flip(){
 
@@ -391,12 +444,14 @@ void ofApp::printArray(int arr[]){
 * https://www.geeksforgeeks.org/quick-sort/
 */
 void ofApp::swap(int* a, int* b){
+
 	int temp = *a;
 	*a = *b;
 	*b = temp;
 }
 
 int ofApp::partition(int array[], int low, int high){
+
 	int pivot = array[high];
 	int i = low - 1;
 	
