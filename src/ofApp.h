@@ -42,9 +42,12 @@ class ofApp : public ofBaseApp{
 		void printArray(int arr[]);
 		void findSquare();
 		int findMin(int a, int b, int c);
-		void searchFingerBlocks();
+		void searchFingerBlocks(bool vertical, int x1, int x2, int y1, int y2);
 		void findFingerTip(int a, int x1, int x2, int y1, int y2);
 		int countFingers(int a, int b1, int b2, bool isX);
+		void whereFingersAt();
+		void findFingerTip2(int finger_index, int x1, int x2, int y1, int y2);
+		void nabla();
 
 
 	ofxPanel panel;
@@ -68,15 +71,18 @@ class ofApp : public ofBaseApp{
 	int sizeOfHand;	
 	int timer;
 
-	int Xavg;
-	int Yavg;	
+	int Xavg;	//x coordinate of average centre of closest spot
+	int Yavg;	//y coordinate of average centre of closest spot
 	int index;
+	int Xc;		//x coordinate of centre of tha palm
+	int Yc;		//y coordinate of centre of the palm
 
 	int M[WIDTH][HEIGHT];
 	int max_of_M = 0;
 	int max_i = 0;
 	int max_j = 0;
 
+	char dirOffFingers [2] = { };
 
 	float howLong;
 	float timeStart;
