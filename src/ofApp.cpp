@@ -6,26 +6,26 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-    
+
 	//Uncomment for verbose info from libfreenect2
 	//ofSetLogLevel(OF_LOG_VERBOSE);
 
 	ofBackground(30, 30, 30);
- 
+
 	//see how many devices we have.
 	ofxKinectV2 tmp;
 	vector <ofxKinectV2::KinectDeviceInfo> deviceList = tmp.getDeviceList();
-    
+
 	//allocate for this many devices
 	kinects.resize(deviceList.size());
 	texDepth.resize(kinects.size());
 	texRGB.resize(kinects.size());
-        
+
 	panel.setup("", "settings.xml", 10, 100);
 
 	//kinect = new ofxKinectV2();
 	//kinect->open(deviceList[0].serial);
-	
+
        	kinects[0] = shared_ptr <ofxKinectV2> (new ofxKinectV2());
        	kinects[0]->open(deviceList[0].serial);
        	panel.add(kinects[0]->params);
@@ -34,17 +34,16 @@ void ofApp::setup(){
 
 	fbo.allocate(512,424,GL_RGBA,4);//GL_LUMINANCE);
 
-//	foundHand = false;   
+//	foundHand = false;
 
 	fbo.begin();
 	ofClear(0.0f,0.0f,0.0f,0.0f);//255,255,255,0);
 	fbo.end();
-
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
-    
+
 	kinect->update();
         if(kinect->isFrameNew()){
         	texDepth[0].loadData(kinect->getDepthPixels());
@@ -52,7 +51,7 @@ void ofApp::update(){
 		getDepth = kinects[0]->getDepthPixels();
 		ofTexture depth = texDepth[0];
 
-		sizeOfHand = 0;
+		size_of_hand = 0;
 //		closestDepth = -1; // some not reachable value in case hand get further 
 		if(ofGetFrameNum()%2==0){//(int)ofGetElapsedTimef()%5==0){
 			printf("\n NEW UPDATE \t time: %f \n", ofGetElapsedTimef());
@@ -60,18 +59,16 @@ void ofApp::update(){
 			loopX(x){
 				loopY(y){
 					index = index(x,y);
-					myDepth[index] = getDepth[index];
+					my_depth[index] = getDepth[index];
 				//	printf("%d\t",myDepth[y*WIDTH +x]);
-					backupDepth[index] = getDepth[index];
+					backup_depth[index] = getDepth[index];
 				}
 			}
-
 
 //			timeStart = ofGetElapsedTimef();
 //			timeEnd = ofGetElapsedTimef();
 //			howLong = timeEnd-timeStart;
 //			printf("howLong: %f\n", howLong);
-			
 
 	//		printf("backupDepth\n");
 	//		printArray(backupDepth);
@@ -90,12 +87,10 @@ void ofApp::update(){
 	//		printArray(myBinary);
 			if(max_of_M > 10){
 				whereFingersAt();
-				nabla();
+				findFingers();
 			}
 		} //end for time partition
 	} //end for if isFrameNew
-
-	
 }
 
 
@@ -113,9 +108,9 @@ void ofApp::draw(){
 	//ofRotate(ofGetElapsedTimef()*50,1,0,0.5);
 	ofSetColor(255,0,0);
 //	ofDrawBox(-100,-100,0,50);
-	int r = (sizeOfHand > 100) ? (100) : 50;
-	ofSetLineWidth(5);	
-	if(sizeOfHand > 10){
+	int r = (size_of_hand > 100) ? (100) : 50;
+	ofSetLineWidth(5);
+	if(size_of_hand > 10){
 		ofDrawBox((Xavg-255),Yavg-212,0,r,r,5);
 	}
 	//ofSetColor(0,255,0);
@@ -123,10 +118,10 @@ void ofApp::draw(){
 	r = max_of_M/2;
 	if((max_i != 0) & (max_j != 0)){
 		ofSetColor(0,255,255);
-		ofSetLineWidth(8);		
-		ofDrawBox((max_i-r)-255, (max_j-r)-212, 0, max_of_M, max_of_M, 5);	
-
+		ofSetLineWidth(8);
+		ofDrawBox((max_i-r)-255, (max_j-r)-212, 0, max_of_M, max_of_M, 5);
 	}
+
 	for(int i = 0; i < 4; i++){
 		ofDrawSphere(fingers[i][0]-255, fingers[i][1]-212, max_of_M/4);
 	}
@@ -134,12 +129,12 @@ void ofApp::draw(){
 	fbo.end();
 
 	ofEnableBlendMode(OF_BLENDMODE_ADD);
-	
+
 	float dwHD = 1920/4;
 	float dhHD = 1080/4;
 
 	float shiftY = 100 + ((10 + texDepth[0].getHeight()) * 0);
-    
+
 	texDepth[0].draw(200, shiftY);
 	texRGB[0].draw(210 + texDepth[0].getWidth(), shiftY, dwHD, dhHD);
 
@@ -147,7 +142,6 @@ void ofApp::draw(){
  	ofSetColor(255,0,0);
 //	panel.draw();
 	ofSetColor(255,255,255);
-
 }
 
 /*
@@ -155,25 +149,26 @@ void ofApp::draw(){
 *
 */
 void ofApp::findClosestSpot(){
-	closestDepth = -1;
-	sizeOfHand = 0;
+
+	closest_depth = -1;
+	size_of_hand = 0;
 //	printf("--start searching \n");
 	int temp;
-	closestDepth = *std::max_element(myDepth, myDepth+WIDTH*HEIGHT);	
-	
+	closest_depth = *std::max_element(my_depth, my_depth+WIDTH*HEIGHT);
+
 	loopX(i){
 		loopY(j){
-			temp = myDepth[index(i,j)];
+			temp = my_depth[index(i,j)];
 			//printf("myDepth %d \t",myDepth[j*WIDTH + i]);
-			if(temp == closestDepth){
+			if(temp == closest_depth){
 				//printf("closestDepth: %d \t temp: %d \n", closestDepth, temp);
-				if(sizeOfHand < (WIDTH*HEIGHT)/4){
-					closestSpot[sizeOfHand][0] = i;
-					closestSpot[sizeOfHand][1] = j;
-					sizeOfHand++;
-					foundHand = true;
-				}else if(sizeOfHand==0){
-					foundHand = false;
+				if(size_of_hand < (WIDTH*HEIGHT)/4){
+					closest_spot[size_of_hand][0] = i;
+					closest_spot[size_of_hand][1] = j;
+					size_of_hand++;
+					found_hand = true;
+				}else if(size_of_hand==0){
+					found_hand = false;
 				//	foundHand = false;
 				//	printf("---NOT HAND---");
 				}
@@ -188,25 +183,26 @@ void ofApp::findClosestSpot(){
 *
 */
 void ofApp::findInBinary(){
-	closestDepth = -1;
-	sizeOfHand = 0;
+
+	closest_depth = -1;
+	size_of_hand = 0;
 //	printf("--start searching \n");
 	char temp;
-	closestDepth = *std::max_element(myDepth, myDepth+WIDTH*HEIGHT);	
-	
+	closest_depth = *std::max_element(my_depth, my_depth+WIDTH*HEIGHT);
+
 	loopX(i){
 		loopY(j){
 	//		int temp = getDepth[j*WIDTH + i];
-			temp = myBinary[index(i,j)];
+			temp = my_binary[index(i,j)];
 		//	if(i == 200 && j == 50)
 			//printf("myDepth %d \t",myDepth[j*WIDTH + i]);
 			if(temp == 'y'){
 				//printf("closestDepth: %d \t temp: %d \n", closestDepth, temp);
-				if(sizeOfHand < (WIDTH*HEIGHT)/4){
-					closestSpot[sizeOfHand][0] = j;
-					closestSpot[sizeOfHand][1] = i;
-					sizeOfHand++;
-					foundHand = true;
+				if(size_of_hand < (WIDTH*HEIGHT)/4){
+					closest_spot[size_of_hand][0] = j;
+					closest_spot[size_of_hand][1] = i;
+					size_of_hand++;
+					found_hand = true;
 				}else{
 				//	foundHand = false;
 				//	printf("---NOT HAND---");
@@ -222,6 +218,7 @@ void ofApp::findInBinary(){
 * Median is calculated from size defined NEIGHBORHOOD.
 */
 void ofApp::filterNoise(){
+
 //	printf("--filter started\n");
 	int arr[NEIGHBORHOOD];
 	int m;
@@ -229,42 +226,43 @@ void ofApp::filterNoise(){
 		loopY(l){
 			m = 0;
 			//leave outer pixels out of blurring
-			if(l > 0 && l < WIDTH-1  && k > 0 && k < HEIGHT-1){  
+			if(l > 0 && l < WIDTH-1  && k > 0 && k < HEIGHT-1){
 				for(int n = k-NEIGH_OFFSET; n < k+NEIGH_OFFSET+1; n++){
 					for(int o = l-NEIGH_OFFSET; o < l+NEIGH_OFFSET+1; o++){
-						arr[m] = backupDepth[index(n,o)];
+						arr[m] = backup_depth[index(n,o)];
 						m++;
 					}
 				}
 				quickSort(arr, 0, 8);
-				myDepth[index(k,l)] = arr[4];
-			}			
+				my_depth[index(k,l)] = arr[4];
+			}
 		 }
 	}
 //	printf("--done filter\n");
 }
 
-void ofApp::detectHand(){			
+void ofApp::detectHand(){	
+		
 //	printf(foundHand?"found\n":"not found\n");
-	if(sizeOfHand>10){
-		printf("sizeOfHand: %d \n", sizeOfHand);
-		printf("closest depth: %d \n", closestDepth);
+	if(size_of_hand>10){
+		printf("sizeOfHand: %d \n", size_of_hand);
+		printf("closest depth: %d \n", closest_depth);
 
 		Xavg = 0;
 		Yavg = 0;
 
-		if(sizeOfHand > 0){
-			for(int i = 0; i < sizeOfHand; i++){
-				if(closestSpot[i][0] != -1){ 	//just to be sure
-					Xavg+=(closestSpot[i][0]);
-					Yavg+=(closestSpot[i][1]);
+		if(size_of_hand > 0){
+			for(int i = 0; i < size_of_hand; i++){
+				if(closest_spot[i][0] != -1){ 	//just to be sure
+					Xavg+=(closest_spot[i][0]);
+					Yavg+=(closest_spot[i][1]);
 				//	printf("count of points: %d\t sum:%d\n")		
 				//	printf("sum%d\n",Xavg);
 				}
 			}
 
-			Xavg /= sizeOfHand;
-			Yavg /= sizeOfHand;
+			Xavg /= size_of_hand;
+			Yavg /= size_of_hand;
 			printf("Xavg: %d \t Yavg: %d \n", Xavg,Yavg);
 			/*coord. system is (-256,256)x(-212,212)*/
 		//	Xavg -= 255;
@@ -272,7 +270,6 @@ void ofApp::detectHand(){
 		}
 	}
 }
-
 
 /*
 * Going through binary image and looking for biggest square.
@@ -287,19 +284,19 @@ void ofApp::findSquare(){
 	max_j = 0;
 
 	for(i = 0; i < HEIGHT; i++){
-		M[i][0] = (myBinary[i*WIDTH] == 'y');// ? 1 : 0;
+		M[i][0] = (my_binary[i*WIDTH] == 'y');// ? 1 : 0;
 	}
 	for(j = 0; j < WIDTH; j++){
-		M[0][j] = (myBinary[j] == 'y');// ? 1 : 0;
+		M[0][j] = (my_binary[j] == 'y');// ? 1 : 0;
 	}
-	
+
 	for(i = 1; i < HEIGHT; i++){
 		for(j = 1; j < WIDTH; j++){
-			if(myBinary[index(i,j)] != 'y'){
+			if(my_binary[index(i,j)] != 'y'){
 				M[i][j] = 0;
 			}else{
 				M[i][j] = int (findMin(M[i][j-1], M[i-1][j], M[i-1][j-1]) + 1);
-			//	printf("%d\t %d %d %d\n", M[i][j], myBinary[index(i, j-1)], myBinary[index(i-1,j)], myBinary[index(i-1,j-1)]);i
+			//	printf("%d\t %d %d %d\n", M[i][j], myBinary[index(i, j-1)], myBinary[index(i-1,j)], myBinary[index(i-1,j-1)]);
 				if(M[i][j] > max_of_M){
 					max_of_M = M[i][j];
 					max_j = i;
@@ -319,12 +316,12 @@ void ofApp::findSquare(){
 
 	Xc = max_i - max_of_M/2;
 	Yc = max_j - max_of_M/2;
-
 }
 
 int ofApp::findMin(int a, int b, int c){
 
 	int min = a;
+
 	if(b < min){
 		min = b;
 	}
@@ -334,15 +331,14 @@ int ofApp::findMin(int a, int b, int c){
 	return min;
 }
 
-
-
 /*
 * Create my binary image, where 1 is pixel with closest value
 */
 void ofApp::treshold(){
+
 	loopX(i){
 		loopY(j){
-			myBinary[index(i,j)]= (myDepth[index(i,j)]>(closestDepth-10)) ? 'y' : 'n';
+			my_binary[index(i,j)]= (my_depth[index(i,j)]>(closest_depth-10)) ? 'y' : 'n';
 		//	printf((myBinary[index(i,j)])? "." : " ");
 		}
 	//	printf("\n");
@@ -359,7 +355,6 @@ void ofApp::printArray(int arr[]){
 		printf("\n");
 	}
 }
-
 
 /*
 * Identify blocks, where fingers should be. 
@@ -383,21 +378,21 @@ void ofApp::searchFingerBlocks(bool vertical,int x_start, int x_end, int y_start
 			y2 = y1 + y_size/4;
 		}
 		findFingerTip2(a, x1, x2, y1, y2);
-	} 
+	}
 }
 
 int ofApp::countFingers(int a, int b1, int b2, bool isX){
 
 	int counter = 0;
-	int lastValue;
+	int last_value;
 	int size = 0;
 
 //	int index = isX ? index[b1,a] : index[a,b1];
 	if(isX){ //a is X coodinate
-		lastValue = myBinary[index(b1,a)];
+		last_value = my_binary[index(b1,a)];
 		for(int i = b1+1; i <= b2; i++){
-			if(myBinary[index(i,a)] != lastValue){
-				if(myBinary[index(i,a)] == 1){
+			if(my_binary[index(i,a)] != last_value){
+				if(my_binary[index(i,a)] == 1){
 					size = 1;
 				}else{
 					if(size < max_of_M/4){
@@ -409,10 +404,10 @@ int ofApp::countFingers(int a, int b1, int b2, bool isX){
 			size++;
 		}
 	}else{
-		lastValue = myBinary[index(a,b1)];
+		last_value = my_binary[index(a,b1)];
 		for(int i = b1+1; i <= b2; i++){
-			if(myBinary[index(a,i)] != lastValue){
-				if(myBinary[index(i,a)] == 1){
+			if(my_binary[index(a,i)] != last_value){
+				if(my_binary[index(i,a)] == 1){
 					size = 1;
 				}else{
 					if(size < max_of_M/4){
@@ -429,31 +424,29 @@ int ofApp::countFingers(int a, int b1, int b2, bool isX){
 
 void ofApp::whereFingersAt(){
 
-	int offHand = max_of_M/6;
+	int off_hand = max_of_M/6;
 	int x, y;
-	int x1 = max_i-10*offHand;
-	int x2 = max_i+4*offHand;
-	int y1 = max_j-10*offHand;
-	int y2 = max_j+4*offHand;
-
-	int howMany = 0;
+	int x1 = max_i-10*off_hand;
+	int x2 = max_i+4*off_hand;
+	int y1 = max_j-10*off_hand;
+	int y2 = max_j+4*off_hand;
+	int how_many = 0;
 	int index = 0;
 
 	for(int i = 0; i < 4; i++){
 		if(i%2 == 0){
 			x = (i == 0) ? x1 : x2;
-			howMany = countFingers(x, y1, y2, true);
+			how_many = countFingers(x, y1, y2, true);
 		}else{
 			y = (i == 1) ? y1 : y2;
-			howMany = countFingers(y, x1, x2, false);
+			how_many = countFingers(y, x1, x2, false);
 		}
-		if(howMany > 1){
+		if(how_many > 1){
 			printf("found fingers on %d.side\n", i);
-			dirOffFingers[index] = i;
+			dir_off_fingers[index] = i;
 			index++;
 		}
 	}
-
 }
 
 /*
@@ -465,8 +458,7 @@ void ofApp::findFingerTip(int a, int x_start, int x_end, int y_start, int y_end)
 
 	int localMax_x = 0;
 	int localMax_y = y_end;
-//	printf("y_start: %d\t y_end: %d\t x_start: %d\t x_end: %d\t", y_start, y_end, x_start, x_end );	
-
+//	printf("y_start: %d\t y_end: %d\t x_start: %d\t x_end: %d\t", y_start, y_end, x_start, x_end );
 
 	for(int i = y_start; i < y_end; i++){
 		for(int j = x_start; j < x_end; j++){
@@ -483,61 +475,59 @@ void ofApp::findFingerTip(int a, int x_start, int x_end, int y_start, int y_end)
 //	printf("FINGER No. %d\t x: %d\t y: %d\t\n",a ,localMax_x ,localMax_y);
 }*/
 
-
 void ofApp::findFingerTip2(int finger_index, int x_start, int x_end, int y_start, int y_end){
 
-	int maxDist = 0;
+	int max_dist = 0;
 	int distance = 0;
-	int maxDist_x = 0;
-	int maxDist_y = 0;
+	int max_dist_x = 0;
+	int max_dist_y = 0;
 
 	printf("Find finger tip in x1: %d\t x2: %d\t y1: %d\t y2: %d\n", x_start, x_end, y_start, y_end);
 
 	for(int i = y_start; i < y_end; i++){
 		for(int j = x_start; j < x_end; j++){
-			if(myBinary[index(i,j)] == 'y'){
+			if(my_binary[index(i,j)] == 'y'){
 				distance = sqrt((Xc-j)*(Xc-j) + (Yc-i)*(Yc-i));
-			//	printf("dstance: %d\n", distance);	
-				if (distance > maxDist){
-					maxDist_y = i;
-					maxDist_x = j;
-					maxDist = distance;
+			//	printf("dstance: %d\n", distance);
+				if (distance > max_dist){
+					max_dist_y = i;
+					max_dist_x = j;
+					max_dist = distance;
 				//	printf("Distance is %d on %d \t %d \n", distance, j, i);
 				}
 			}
 		}
 	}
 
-	fingers[finger_index][0] = maxDist_x;
-	fingers[finger_index][1] = maxDist_y;
-	printf("FINGER No. %d\t x: %d\t y: %d\t\n",finger_index ,maxDist_x ,maxDist_y);
+	fingers[finger_index][0] = max_dist_x;
+	fingers[finger_index][1] = max_dist_y;
+	printf("FINGER No. %d\t x: %d\t y: %d\t\n",finger_index ,max_dist_x ,max_dist_y);
 }
 
 /*
 * According to the way of fingers, detect what blocks need to be searched for fingertips
 */
-void ofApp::nabla(){
+void ofApp::findFingers(){
 
 	int off = max_of_M/4;
-	for(int i = 0; i < 2; i++){		
-		printf("Switch in case %d\n", dirOffFingers[i]);
-		switch(dirOffFingers[i]){
+
+	for(int i = 0; i < 2; i++){
+		printf("Switch in case %d\n", dir_off_fingers[i]);
+		switch(dir_off_fingers[i]){
 			case 0:
 				searchFingerBlocks(true, max_i-4*max_of_M, max_i-max_of_M, max_j-max_of_M-off, max_j + off);
 				break;
 			case 1:
-				searchFingerBlocks(false, max_i-max_of_M-off, max_i+off, max_j-4*max_of_M-off, max_j + max_of_M);			
+				searchFingerBlocks(false, max_i-max_of_M-off, max_i+off, max_j-4*max_of_M-off, max_j + max_of_M);
 				break;
 			case 2:
 				searchFingerBlocks(true, max_i, max_i+3*max_of_M, max_j-max_of_M-off,max_j+off);
 				break;
-			case 3: 
+			case 3:
 				searchFingerBlocks(false, max_i-max_of_M-off,max_i+off,max_j,max_j+3*max_of_M);
 				break;
 		}
-
 	}
-
 }
 
 /*
@@ -555,26 +545,24 @@ int ofApp::partition(int array[], int low, int high){
 
 	int pivot = array[high];
 	int i = low - 1;
-	
+
 	for(int j = low; j <= high - 1; j++){
 		if(array[j] <= pivot){
 			i++;
 			swap(&array[i], &array[j]);
-		}	
-	}	
+		}
+	}
 	swap(&array[i+1], &array[high]);
 	return (i+1);
 }
 
-
 void ofApp::quickSort(int array[], int low, int high){
+
 	if(low<high){
 		int partI = partition(array, low, high);
 		quickSort(array, low, partI - 1);
 		quickSort(array, partI + 1, high);
-
 	}
-
 }
 
 //--------------------------------------------------------------

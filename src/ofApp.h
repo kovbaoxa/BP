@@ -10,9 +10,6 @@
 #define NEIGHBORHOOD 9 // can be 9 (neighborhoor 3x3) or 25 (neighborhood 5x5)
 #define NEIGH_OFFSET (NEIGHBORHOOD/9) //for calculating of coordinates
 
-
-//#define MOVES_IN_HIST
-
 class ofApp : public ofBaseApp{
 
 	public:
@@ -47,54 +44,63 @@ class ofApp : public ofBaseApp{
 		int countFingers(int a, int b1, int b2, bool isX);
 		void whereFingersAt();
 		void findFingerTip2(int finger_index, int x1, int x2, int y1, int y2);
-		void nabla();
-
+		void findFingers();
 
 	ofxPanel panel;
-    
+
         vector < shared_ptr<ofxKinectV2> > kinects;
 	shared_ptr<ofxKinectV2> kinect;
-	
+
 	ofPixels getDepth;
-
-	/*
-	* frame = 210 000+ px
-	* frame/9 = 24 000+ px
-	* 20 000 px could be more than enough for now
-	*/
-
-	int myDepth[WIDTH*HEIGHT] = { };
-	int backupDepth[WIDTH*HEIGHT] = { };
-	char myBinary[WIDTH*HEIGHT] = { };
-	int medianNeigh[NEIGHBORHOOD];
-	int closestSpot[(WIDTH*HEIGHT)/9][2]; 
-	int sizeOfHand;	
-	int timer;
-
-	int Xavg;	//x coordinate of average centre of closest spot
-	int Yavg;	//y coordinate of average centre of closest spot
-	int index;
-	int Xc;		//x coordinate of centre of tha palm
-	int Yc;		//y coordinate of centre of the palm
-
-	int M[WIDTH][HEIGHT];
-	int max_of_M = 0;
-	int max_i = 0;
-	int max_j = 0;
-
-	char dirOffFingers [2] = { };
-
-	float howLong;
-	float timeStart;
-	float timeEnd;
-	int offsetDepth;
-
 	ofFbo fbo;
         vector <ofTexture> texDepth;
         vector <ofTexture> texRGB;
-	
-	bool foundHand;
-	int closestDepth;
 
-	int fingers[5][2];
+/*
+* frame = 217 088 px
+*/
+
+	int my_depth[WIDTH*HEIGHT] = { };
+	int backup_depth[WIDTH*HEIGHT] = { };
+	char my_binary[WIDTH*HEIGHT] = { };
+
+/*
+* time related variables
+*/
+	int timer;	
+	float how_long;
+	float time_start;
+	float time_end;
+
+/*
+* coordinates and directions
+*/
+	int Xavg;	// x coordinate of average centre of closest spot
+	int Yavg;	// y coordinate of average centre of closest spot
+	int Xc;		// x coordinate of centre of tha palm
+	int Yc;		// y coordinate of centre of the palm
+	char dir_off_fingers [2] = { };		// fingers appear only on two sides of hand
+	int fingers[5][2];	// coordinates of finger tips
+	int closest_spot[(WIDTH*HEIGHT)/9][2];		//coordinates of closest spot
+
+
+/*
+* values
+*/
+	int size_of_hand;	// size of closest spot found on picture
+	int index;	
+	int offset_depth;	// hand is not always exactly in one plane
+	bool found_hand;
+	int closest_depth;	// closest depth on the picture	
+	int median_neigh[NEIGHBORHOOD];		// index for finding median according to neighborhood size
+
+
+/*
+* coordinates and size of found palm
+*/
+	int M[WIDTH][HEIGHT];	// initial array for search
+	int max_of_M = 0;	// size of biggest square found
+	int max_i = 0;		// x coordinate of lower right corner of the biggest square found
+	int max_j = 0;		// y coordinate of lower right corner of the biggest square found
+
 };
