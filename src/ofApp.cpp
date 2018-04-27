@@ -87,7 +87,9 @@ void ofApp::update(){
 	//		printArray(myBinary);
 			if(max_of_M > 10){
 				whereFingersAt();
-				findFingers();
+			//	findFingers();
+				findFingerTip3(0);
+			//	findFingerTip3(1);
 			}
 		} //end for time partition
 	} //end for if isFrameNew
@@ -360,7 +362,7 @@ void ofApp::printArray(int arr[]){
 * Identify blocks, where fingers should be. 
 *
 */
-void ofApp::searchFingerBlocks(bool vertical,int x_start, int x_end, int y_start, int y_end){
+void ofApp::searchFingerBlocks(int x_start, int x_end, int y_start, int y_end){
 
 	int x_size = x_end-x_start;
 	int y_size = y_end-y_start;
@@ -370,7 +372,7 @@ void ofApp::searchFingerBlocks(bool vertical,int x_start, int x_end, int y_start
 	int y2 = y_end;
 
 	for(float a = 0; a < 4; a++){
-		if(vertical){
+		if(fingers_vertical){
 			x1 = x_start + (a/4)*x_size;
 			x2 = x1 + x_size/4;
 		}else{
@@ -381,20 +383,24 @@ void ofApp::searchFingerBlocks(bool vertical,int x_start, int x_end, int y_start
 	}
 }
 
-int ofApp::countFingers(int a, int b1, int b2, bool isX){
+int ofApp::countFingers(int a, int b1, int b2){
 
 	int counter = 0;
 	int last_value;
 	int size = 0;
 
 //	int index = isX ? index[b1,a] : index[a,b1];
-	if(isX){ //a is X coodinate
+	if(fingers_vertical){ //a is X coodinate
 		last_value = my_binary[index(b1,a)];
 		for(int i = b1+1; i <= b2; i++){
 			if(my_binary[index(i,a)] != last_value){
 				if(my_binary[index(i,a)] == 1){
 					size = 1;
+					finger_width[counter][0][0] = a;
+					finger_width[counter][0][1] = i;
 				}else{
+					finger_width[counter][1][0] = a;
+					finger_width[counter][1][1] = i;
 					if(size < max_of_M/4){
 						counter++;
 					}
@@ -424,26 +430,28 @@ int ofApp::countFingers(int a, int b1, int b2, bool isX){
 
 void ofApp::whereFingersAt(){
 
-	int off_hand = max_of_M/6;
+	int off_hand = max_of_M/7;
 	int x, y;
-	int x1 = max_i-10*off_hand;
-	int x2 = max_i+4*off_hand;
-	int y1 = max_j-10*off_hand;
-	int y2 = max_j+4*off_hand;
+	int x1 = max_i-12*off_hand;
+	int x2 = max_i+5*off_hand;
+	int y1 = max_j-12*off_hand;
+	int y2 = max_j+5*off_hand;
 	int how_many = 0;
 	int index = 0;
 
 	for(int i = 0; i < 4; i++){
 		if(i%2 == 0){
 			x = (i == 0) ? x1 : x2;
-			how_many = countFingers(x, y1, y2, true);
+			how_many = countFingers(x, y1, y2);
+			fingers_vertical = true;
 		}else{
 			y = (i == 1) ? y1 : y2;
-			how_many = countFingers(y, x1, x2, false);
+			how_many = countFingers(y, x1, x2);
+			fingers_vertical = false;
 		}
 		if(how_many > 1){
 			printf("found fingers on %d.side\n", i);
-			dir_off_fingers[index] = i;
+			dir_of_fingers[index] = i;
 			index++;
 		}
 	}
@@ -504,6 +512,74 @@ void ofApp::findFingerTip2(int finger_index, int x_start, int x_end, int y_start
 	printf("FINGER No. %d\t x: %d\t y: %d\t\n",finger_index ,max_dist_x ,max_dist_y);
 }
 
+void ofApp::findFingerTip3(int num){
+
+	int middle = -10;
+	int width = -10;
+
+	for(int i = 0; i < 5; i++){
+
+		int x1 = finger_width[i][0][0];
+		int x2 = finger_width[i][1][0];
+		int y1 = finger_width[i][0][1];
+		int y2 = finger_width[i][1][1];
+
+		if(fingers_vertical){
+			width = y2 - y1;
+			middle = y2 - (width/2);
+		}else{
+			width = x2 - x1;
+			middle = x2 - (width/2);
+		}
+
+		switch(dir_of_fingers[num]){
+			case 0:
+				for(int j = max_i - max_of_M; j > max_i - 4*max_of_M; j--){
+					if(my_binary[index(middle, j)] == 'y'){
+						fingers[i][0] = j;
+						fingers[i][1] = middle;
+					}else{
+						break;
+					}
+				}
+				break;
+			case 1:
+				for(int j = max_j - max_of_M; j > max_j - 4*max_of_M; j--){
+					if(my_binary[index(j, middle)] == 'y' ){
+						fingers[i][0] = middle;
+						fingers[i][1] = j;
+					}else{
+						break;
+					}
+				}
+				break;
+			case 2:
+				for(int j = max_i; j < max_i + 3*max_of_M; j++){
+					if(my_binary[index(middle, j)] == 'y' ){
+						fingers[i][0] = j;
+						fingers[i][1] = middle;
+					}else{
+						break;
+					}
+				}
+				break;
+			case 3:
+				for(int j = max_j; j < max_j + 3*max_of_M; j++){
+					if(my_binary[index(middle, j)] == 'y' ){
+						fingers[i][0] = middle;
+						fingers[i][1] = j;
+					}else{
+						break;
+					}
+				}
+				break;
+		}
+		printf("FINGER No. %d\t x: %d\t y: %d\t direction: %d\n", i, fingers[i][0] ,fingers[i][1],dir_of_fingers[num]);
+	}
+
+}
+
+
 /*
 * According to the way of fingers, detect what blocks need to be searched for fingertips
 */
@@ -512,19 +588,19 @@ void ofApp::findFingers(){
 	int off = max_of_M/4;
 
 	for(int i = 0; i < 2; i++){
-		printf("Switch in case %d\n", dir_off_fingers[i]);
-		switch(dir_off_fingers[i]){
+		printf("Switch in case %d\n", dir_of_fingers[i]);
+		switch(dir_of_fingers[i]){
 			case 0:
-				searchFingerBlocks(true, max_i-4*max_of_M, max_i-max_of_M, max_j-max_of_M-off, max_j + off);
+				searchFingerBlocks(max_i-4*max_of_M, max_i-max_of_M, max_j-max_of_M-off, max_j + off);
 				break;
 			case 1:
-				searchFingerBlocks(false, max_i-max_of_M-off, max_i+off, max_j-4*max_of_M-off, max_j + max_of_M);
+				searchFingerBlocks(max_i-max_of_M-off, max_i+off, max_j-4*max_of_M-off, max_j + max_of_M);
 				break;
 			case 2:
-				searchFingerBlocks(true, max_i, max_i+3*max_of_M, max_j-max_of_M-off,max_j+off);
+				searchFingerBlocks(max_i, max_i+3*max_of_M, max_j-max_of_M-off,max_j+off);
 				break;
 			case 3:
-				searchFingerBlocks(false, max_i-max_of_M-off,max_i+off,max_j,max_j+3*max_of_M);
+				searchFingerBlocks(max_i-max_of_M-off,max_i+off,max_j,max_j+3*max_of_M);
 				break;
 		}
 	}

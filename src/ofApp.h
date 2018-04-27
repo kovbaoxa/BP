@@ -39,11 +39,12 @@ class ofApp : public ofBaseApp{
 		void printArray(int arr[]);
 		void findSquare();
 		int findMin(int a, int b, int c);
-		void searchFingerBlocks(bool vertical, int x1, int x2, int y1, int y2);
+		void searchFingerBlocks(int x1, int x2, int y1, int y2);
 		void findFingerTip(int a, int x1, int x2, int y1, int y2);
-		int countFingers(int a, int b1, int b2, bool isX);
+		int countFingers(int a, int b1, int b2);
 		void whereFingersAt();
 		void findFingerTip2(int finger_index, int x1, int x2, int y1, int y2);
+		void findFingerTip3(int i);
 		void findFingers();
 
 	ofxPanel panel;
@@ -79,9 +80,10 @@ class ofApp : public ofBaseApp{
 	int Yavg;	// y coordinate of average centre of closest spot
 	int Xc;		// x coordinate of centre of tha palm
 	int Yc;		// y coordinate of centre of the palm
-	char dir_off_fingers [2] = { };		// fingers appear only on two sides of hand
+	char dir_of_fingers [2] = { };		// fingers appear only on two sides of hand
 	int fingers[5][2];	// coordinates of finger tips
 	int closest_spot[(WIDTH*HEIGHT)/9][2];		//coordinates of closest spot
+	int finger_width[5][2][2];		// 5 fingers, start/end, x/y
 
 
 /*
@@ -93,7 +95,7 @@ class ofApp : public ofBaseApp{
 	bool found_hand;
 	int closest_depth;	// closest depth on the picture	
 	int median_neigh[NEIGHBORHOOD];		// index for finding median according to neighborhood size
-
+	bool fingers_vertical;
 
 /*
 * coordinates and size of found palm
