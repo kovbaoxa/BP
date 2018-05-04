@@ -41,7 +41,7 @@ class ofApp : public ofBaseApp{
 		int findMin(int a, int b, int c);
 		void searchFingerBlocks(int x1, int x2, int y1, int y2);
 		void findFingerTip(int a, int x1, int x2, int y1, int y2);
-		int countFingers(int a, int b1, int b2);
+		int countFingers(int a, int b1, int b2, bool vertical);
 		void whereFingersAt();
 		void findFingerTip2(int finger_index, int x1, int x2, int y1, int y2);
 		void findFingerTip3(int i);

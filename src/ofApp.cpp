@@ -65,11 +65,6 @@ void ofApp::update(){
 				}
 			}
 
-//			timeStart = ofGetElapsedTimef();
-//			timeEnd = ofGetElapsedTimef();
-//			howLong = timeEnd-timeStart;
-//			printf("howLong: %f\n", howLong);
-
 	//		printf("backupDepth\n");
 	//		printArray(backupDepth);
 			filterNoise();
@@ -77,11 +72,9 @@ void ofApp::update(){
 
 	//		printArray(myDepth);
 			treshold();
-			//findClosestSpot();
 			findInBinary();
 			detectHand();
 			findSquare();
-	//		searchFingerBlocks();
 
 	//		printf("BINARY\n");
 	//		printArray(myBinary);
@@ -169,8 +162,8 @@ void ofApp::findClosestSpot(){
 					closest_spot[size_of_hand][1] = j;
 					size_of_hand++;
 					found_hand = true;
-				}else if(size_of_hand==0){
-					found_hand = false;
+			//	}else if(size_of_hand==0){
+			//		found_hand = false;
 				//	foundHand = false;
 				//	printf("---NOT HAND---");
 				}
@@ -383,14 +376,14 @@ void ofApp::searchFingerBlocks(int x_start, int x_end, int y_start, int y_end){
 	}
 }
 
-int ofApp::countFingers(int a, int b1, int b2){
+int ofApp::countFingers(int a, int b1, int b2, bool vertical){
 
 	int counter = 0;
 	int last_value;
 	int size = 0;
 
 //	int index = isX ? index[b1,a] : index[a,b1];
-	if(fingers_vertical){ //a is X coodinate
+	if(vertical){ //a is X coodinate
 		last_value = my_binary[index(b1,a)];
 		for(int i = b1+1; i <= b2; i++){
 			if(my_binary[index(i,a)] != last_value){
@@ -430,29 +423,37 @@ int ofApp::countFingers(int a, int b1, int b2){
 
 void ofApp::whereFingersAt(){
 
-	int off_hand = max_of_M/7;
+	int off_palm = max_of_M/7;
 	int x, y;
-	int x1 = max_i-12*off_hand;
-	int x2 = max_i+5*off_hand;
-	int y1 = max_j-12*off_hand;
-	int y2 = max_j+5*off_hand;
+	int x1 = max_i-12*off_palm;
+	int x2 = max_i+5*off_palm;
+	int y1 = max_j-12*off_palm;
+	int y2 = max_j+5*off_palm;
 	int how_many = 0;
 	int index = 0;
+
+	bool orIsIt = false;
+	int how_many_now = 0;
 
 	for(int i = 0; i < 4; i++){
 		if(i%2 == 0){
 			x = (i == 0) ? x1 : x2;
-			how_many = countFingers(x, y1, y2);
-			fingers_vertical = true;
+			how_many = countFingers(x, y1, y2, true);
+			x = (i == 0) ? (x - 2*off_palm) : (x + 2*off_palm); 
+			how_many_now = countFingers(x, y1, y2, true);
+			//fingers_vertical = true;
 		}else{
 			y = (i == 1) ? y1 : y2;
-			how_many = countFingers(y, x1, x2);
-			fingers_vertical = false;
+			how_many = countFingers(y, x1, x2, false);
+			y = (i == 1) ? (y - 2*off_palm) : (y + 2*off_palm);
+			how_many_now = countFingers(y, x1, x2, false);
+			//fingers_vertical = false;
 		}
-		if(how_many > 1){
+		if((how_many > 1) && (how_many_now > 1)){
 			printf("found fingers on %d.side\n", i);
 			dir_of_fingers[index] = i;
 			index++;
+			fingers_vertical = (i%2 == 0);
 		}
 	}
 }
