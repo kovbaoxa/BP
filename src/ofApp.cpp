@@ -75,6 +75,7 @@ void ofApp::update(){
 			findInBinary();
 			detectHand();
 			findSquare();
+			cropAOI();
 
 	//		printf("BINARY\n");
 	//		printArray(myBinary);
@@ -313,6 +314,21 @@ void ofApp::findSquare(){
 	Yc = max_j - max_of_M/2;
 }
 
+/*
+* Crop AOI (area of interest) from binary picture. AOI is sized tenth of W*H and center is in palm center.
+*/
+void ofApp::cropAOI(){
+
+	int d = sqrt(EIGHTH)/2;
+
+	for(int i = Xc - d; i < Xc + d; i++){
+		for(int j = Yc - d; j < Yc + d; j++){
+			my_spot[index(j,i)] = my_binary[index(j,i)];
+		}
+	}
+ 
+}
+
 int ofApp::findMin(int a, int b, int c){
 
 	int min = a;
@@ -384,9 +400,9 @@ int ofApp::countFingers(int a, int b1, int b2, bool vertical){
 
 //	int index = isX ? index[b1,a] : index[a,b1];
 	if(vertical){ //a is X coodinate
-		last_value = my_binary[index(b1,a)];
+		last_value = my_spot[index(b1,a)];
 		for(int i = b1+1; i <= b2; i++){
-			if(my_binary[index(i,a)] != last_value){
+			if(my_spot[index(i,a)] != last_value){
 				if(my_binary[index(i,a)] == 1){
 					size = 1;
 					finger_width[counter][0][0] = a;
@@ -403,10 +419,10 @@ int ofApp::countFingers(int a, int b1, int b2, bool vertical){
 			size++;
 		}
 	}else{
-		last_value = my_binary[index(a,b1)];
+		last_value = my_spot[index(a,b1)];
 		for(int i = b1+1; i <= b2; i++){
-			if(my_binary[index(a,i)] != last_value){
-				if(my_binary[index(i,a)] == 1){
+			if(my_spot[index(a,i)] != last_value){
+				if(my_spot[index(i,a)] == 1){
 					size = 1;
 				}else{
 					if(size < max_of_M/4){
@@ -431,8 +447,6 @@ void ofApp::whereFingersAt(){
 	int y2 = max_j+5*off_palm;
 	int how_many = 0;
 	int index = 0;
-
-	bool orIsIt = false;
 	int how_many_now = 0;
 
 	for(int i = 0; i < 4; i++){
@@ -495,7 +509,7 @@ void ofApp::findFingerTip2(int finger_index, int x_start, int x_end, int y_start
 
 	for(int i = y_start; i < y_end; i++){
 		for(int j = x_start; j < x_end; j++){
-			if(my_binary[index(i,j)] == 'y'){
+			if(my_spot[index(i,j)] == 'y'){
 				distance = sqrt((Xc-j)*(Xc-j) + (Yc-i)*(Yc-i));
 			//	printf("dstance: %d\n", distance);
 				if (distance > max_dist){
@@ -536,7 +550,7 @@ void ofApp::findFingerTip3(int num){
 		switch(dir_of_fingers[num]){
 			case 0:
 				for(int j = max_i - max_of_M; j > max_i - 4*max_of_M; j--){
-					if(my_binary[index(middle, j)] == 'y'){
+					if(my_spot[index(middle, j)] == 'y'){
 						fingers[i][0] = j;
 						fingers[i][1] = middle;
 					}else{
@@ -546,7 +560,7 @@ void ofApp::findFingerTip3(int num){
 				break;
 			case 1:
 				for(int j = max_j - max_of_M; j > max_j - 4*max_of_M; j--){
-					if(my_binary[index(j, middle)] == 'y' ){
+					if(my_spot[index(j, middle)] == 'y' ){
 						fingers[i][0] = middle;
 						fingers[i][1] = j;
 					}else{
@@ -556,7 +570,7 @@ void ofApp::findFingerTip3(int num){
 				break;
 			case 2:
 				for(int j = max_i; j < max_i + 3*max_of_M; j++){
-					if(my_binary[index(middle, j)] == 'y' ){
+					if(my_spot[index(middle, j)] == 'y' ){
 						fingers[i][0] = j;
 						fingers[i][1] = middle;
 					}else{
@@ -566,7 +580,7 @@ void ofApp::findFingerTip3(int num){
 				break;
 			case 3:
 				for(int j = max_j; j < max_j + 3*max_of_M; j++){
-					if(my_binary[index(middle, j)] == 'y' ){
+					if(my_spot[index(middle, j)] == 'y' ){
 						fingers[i][0] = middle;
 						fingers[i][1] = j;
 					}else{
