@@ -53,7 +53,7 @@ void ofApp::update(){
 
 		size_of_hand = 0;
 //		closestDepth = -1; // some not reachable value in case hand get further 
-		if(ofGetFrameNum()%2==0){//(int)ofGetElapsedTimef()%5==0){
+		if(ofGetFrameNum()%4==0){//(int)ofGetElapsedTimef()%5==0){
 			printf("\n NEW UPDATE \t time: %f \n", ofGetElapsedTimef());
 			//load picture into own array
 			loopX(x){
@@ -449,6 +449,10 @@ void ofApp::whereFingersAt(){
 	int index = 0;
 	int how_many_now = 0;
 
+	for(int i = 0; i < 2; i++){
+		dir_of_fingers[i] = -1;
+	}
+
 	for(int i = 0; i < 4; i++){
 		if(i%2 == 0){
 			x = (i == 0) ? x1 : x2;
@@ -468,6 +472,7 @@ void ofApp::whereFingersAt(){
 			dir_of_fingers[index] = i;
 			index++;
 			fingers_vertical = (i%2 == 0);
+			printf("dir_of_fingers: %d \t %d \n", dir_of_fingers[0], dir_of_fingers[1]);
 		}
 	}
 }
@@ -531,8 +536,13 @@ void ofApp::findFingerTip3(int num){
 
 	int middle = -10;
 	int width = -10;
+	int length = 0;
+	int min_length = 5;
+	int count = 0;
 
 	for(int i = 0; i < 5; i++){
+
+		length = 0;
 
 		int x1 = finger_width[i][0][0];
 		int x2 = finger_width[i][1][0];
@@ -553,6 +563,7 @@ void ofApp::findFingerTip3(int num){
 					if(my_spot[index(middle, j)] == 'y'){
 						fingers[i][0] = j;
 						fingers[i][1] = middle;
+						length++;
 					}else{
 						break;
 					}
@@ -563,6 +574,7 @@ void ofApp::findFingerTip3(int num){
 					if(my_spot[index(j, middle)] == 'y' ){
 						fingers[i][0] = middle;
 						fingers[i][1] = j;
+						length++;
 					}else{
 						break;
 					}
@@ -573,6 +585,7 @@ void ofApp::findFingerTip3(int num){
 					if(my_spot[index(middle, j)] == 'y' ){
 						fingers[i][0] = j;
 						fingers[i][1] = middle;
+						length++;
 					}else{
 						break;
 					}
@@ -580,17 +593,27 @@ void ofApp::findFingerTip3(int num){
 				break;
 			case 3:
 				for(int j = max_j; j < max_j + 3*max_of_M; j++){
-					if(my_spot[index(middle, j)] == 'y' ){
+					if(my_spot[index(j, middle)] == 'y' ){
 						fingers[i][0] = middle;
 						fingers[i][1] = j;
+						length++;
 					}else{
 						break;
 					}
 				}
 				break;
 		}
-		printf("FINGER No. %d\t x: %d\t y: %d\t direction: %d\n", i, fingers[i][0] ,fingers[i][1],dir_of_fingers[num]);
+
+		if(length > min_length){
+			count++;
+		}else{
+			fingers[i][0] = -1000;
+			fingers[i][1] = -1000;
+		}
+
+		printf("FINGER No. %d\t x: %d\t y: %d\t direction: %d\t length: %d \n", i, fingers[i][0] ,fingers[i][1],dir_of_fingers[num], length);
 	}
+	printf("Found %d fingers \n", count);
 
 }
 
