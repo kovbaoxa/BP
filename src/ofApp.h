@@ -42,12 +42,15 @@ class ofApp : public ofBaseApp{
 		int findMin(int a, int b, int c);
 		void searchFingerBlocks(int x1, int x2, int y1, int y2);
 		void findFingerTip(int a, int x1, int x2, int y1, int y2);
-		int countFingers(int a, int b1, int b2, bool vertical);
+		int countFingers(int a, int b1, int b2, int dir);
 		void whereFingersAt();
 		void findFingerTip2(int finger_index, int x1, int x2, int y1, int y2);
 		void findFingerTip3(int i);
+		void findFingerTip4();
+		bool isThereFinger(int a);
+		int identifyFinger(int x, int y);
 		void findFingers();
-		void cropAOI();
+		void cropROI();
 
 	ofxPanel panel;
 
@@ -86,7 +89,7 @@ class ofApp : public ofBaseApp{
 	char dir_of_fingers [2] = { };		// fingers appear only on two sides of hand
 	int fingers[5][2];	// coordinates of finger tips
 	int closest_spot[EIGHTH][2];		//coordinates of closest spot
-	int finger_width[5][2][2];		// 5 fingers, start/end, x/y
+	int finger_width[4][5][2][2];		//4 dir, 5 fingers, start/end, x/y
 
 
 /*
@@ -99,6 +102,8 @@ class ofApp : public ofBaseApp{
 	int closest_depth;	// closest depth on the picture	
 	int median_neigh[NEIGHBORHOOD];		// index for finding median according to neighborhood size
 	bool fingers_vertical;
+	int num_of_banned;
+	int banned[100];
 
 /*
 * coordinates and size of found palm
