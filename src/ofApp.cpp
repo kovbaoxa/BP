@@ -63,7 +63,10 @@ void ofApp::update(){
 				banned[i] = 0;
 			}
 			num_of_banned = 0;
-			printf("num_of_banned shall be nulled: %d \n", num_of_banned);
+
+			//null number of fingers
+			fingers_found = 0;
+
 			//load picture into own array
 			loopX(x){
 				loopY(y){
@@ -638,10 +641,11 @@ void ofApp::findFingerTip3(int dir_index){
 void ofApp::findFingerTip4(){
 
 	int count = 0;
-	int index = 0;
-	//for(int a = 0; a < 5; a++){
+	
 		switch(dir_of_fingers[0]){
 			case 1:
+				searchFromTo((Yc - 3*max_of_M), (Yc - max_of_M), (Xc - max_of_M), (Xc + max_of_M),  false);
+/*
 				for(int i = Yc - 3*max_of_M; i < Yc - max_of_M; i++){
 					for(int j = Xc - max_of_M; j < Xc + max_of_M; j++){
 						if(my_spot[index(i,j)] == 'y'){
@@ -654,9 +658,12 @@ void ofApp::findFingerTip4(){
 							}
 						}	
 					}
-				}
+				}*/
 				break;
 			case 0:
+				searchFromTo((Xc - 3*max_of_M), (Xc - max_of_M), (Yc - max_of_M), (Yc + max_of_M), false);
+
+/*
 				for(int i = Xc - 3*max_of_M; i < Xc - max_of_M; i++){
 					for(int j = Yc - max_of_M; j < Yc + max_of_M; j++){
 						if(my_spot[index(j,i)] == 'y'){
@@ -668,11 +675,12 @@ void ofApp::findFingerTip4(){
 							}
 						}	
 					}
-				}
+				}*/
 				break;
 			case 2:
-				for(int i = Xc + 3*max_of_M; i > Xc + max_of_M; i--){
-					for(int j = Yc - max_of_M; j < Xc + max_of_M; j++){
+				searchFromTo((Xc + 3*max_of_M), (Xc + max_of_M), (Yc - max_of_M), (Yc + max_of_M), true);
+				/*for(int i = Xc + 3*max_of_M; i > Xc + max_of_M; i--){
+					for(int j = Yc - max_of_M; j < Yc + max_of_M; j++){
 						if(my_spot[index(i,j)] == 'y'){
 							if(!isThereFinger(i)){
 								fingers[index][0] = i;
@@ -682,10 +690,11 @@ void ofApp::findFingerTip4(){
 							}
 						}	
 					}
-				}
+				}*/
 				break;
 			case 3:
-				for(int i = Yc + 3*max_of_M; i > Yc + max_of_M; i--){
+				searchFromTo((Yc + 3*max_of_M), (Yc + max_of_M), (Xc - max_of_M), (Xc + max_of_M), true);
+				/*for(int i = Yc + 3*max_of_M; i > Yc + max_of_M; i--){
 					for(int j = Xc - max_of_M; j < Xc + max_of_M; j++){
 						if(my_spot[index(i,j)] == 'y'){
 							if(!isThereFinger(j)){
@@ -696,37 +705,54 @@ void ofApp::findFingerTip4(){
 							}
 						}	
 					}
-				}
+				}*/
 				break;
 		}
-		printf("Found %d fingers \n", count);
+		printf("Found %d fingers \n", fingers_found);
 }
 
 /*
 *
 * TODO: find out what finger it is and write in right index of fingers
 */
-void ofApp::searchFromTo(outer_from, outer_to, inner_from, inner_to, count){
+void ofApp::searchFromTo(int outer_from, int outer_to, int inner_from, int inner_to, bool otherWay){
 	
 	int interest;
-
-	for(int i = outer_from; i < outer_to; i++){
-		for(int j = inner_from; j < inner_to; j++){
-			if(my_spot[index(i,j)] == 'y'){
-				interest = fingers_vertical ? i : j;
-				if(!isThereFinger(j)){
-					fingers[index][0] = j;
-					fingers[index][1] = i;
-					count++;
-					printf("FINGER No. %d\t x: %d\t y: %d\t \n", count, fingers[count][0] ,fingers[count][1]);
-					
-							}
-						}	
+	int other;
+	if(!otherWay){
+		for(int i = outer_from; i < outer_to; i++){
+			for(int j = inner_from; j < inner_to; j++){
+				if(my_spot[index(i,j)] == 'y'){
+					interest = fingers_vertical ? i : j;
+					other = fingers_vertical ? j : i;
+					if(!isThereFinger(interest)){
+						fingers[fingers_found][0] = interest;
+						fingers[fingers_found][1] = other;
+						fingers_found++;
+						printf("FINGER No. %d\t x: %d\t y: %d\t \n", fingers_found, fingers[fingers_found][0] ,fingers[fingers_found][1]);
 					}
-				}
+				}	
+			}
+		}
+	}else{
+		for(int i = outer_from; i > outer_to; i--){
+			for(int j = inner_from; j < inner_to; j++){
+				if(my_spot[index(i,j)] == 'y'){
+					interest = fingers_vertical ? i : j;
+					other = fingers_vertical ? j : i;
+					if(!isThereFinger(interest)){
+						fingers[fingers_found][0] = interest;
+						fingers[fingers_found][1] = other;
+						fingers_found++;
+						printf("FINGER No. %d\t x: %d\t y: %d\t \n", fingers_found, fingers[fingers_found][0] ,fingers[fingers_found][1]);
+					}
+				}	
+			}
+		}
 
 
 
+	}
 }
 
 bool ofApp::isThereFinger(int a){
@@ -742,9 +768,9 @@ bool ofApp::isThereFinger(int a){
 	printf("a: %d\n", a);
 	for(int i = a - offset; i < a + offset; i++){
 		banned[num_of_banned++] = i;
-		printf("%d \t", i);
+//		printf("%d \t", i);
 	}
-	printf("\n");
+//	printf("\n");
 	return false;
 }
 

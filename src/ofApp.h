@@ -47,6 +47,7 @@ class ofApp : public ofBaseApp{
 		void findFingerTip2(int finger_index, int x1, int x2, int y1, int y2);
 		void findFingerTip3(int i);
 		void findFingerTip4();
+		void searchFromTo(int from1, int to1, int from2, int to2, bool other_way);
 		bool isThereFinger(int a);
 		int identifyFinger(int x, int y);
 		void findFingers();
@@ -104,6 +105,7 @@ class ofApp : public ofBaseApp{
 	bool fingers_vertical;
 	int num_of_banned;
 	int banned[100];	//size of palm was always <50 
+	int fingers_found;
 
 /*
 * coordinates and size of found palm
