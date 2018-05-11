@@ -103,7 +103,7 @@ class ofApp : public ofBaseApp{
 	int median_neigh[NEIGHBORHOOD];		// index for finding median according to neighborhood size
 	bool fingers_vertical;
 	int num_of_banned;
-	int banned[100];
+	int banned[100];	//size of palm was always <50 
 
 /*
 * coordinates and size of found palm
