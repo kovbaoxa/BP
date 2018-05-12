@@ -423,7 +423,7 @@ int ofApp::countFingers(int a, int b1, int b2, int dir){
 					finger_width[dir][counter][1][0] = a;
 					finger_width[dir][counter][1][1] = i;
 
-					if(size < max_of_M/4){
+					if(size < max_of_M/3){
 						counter++;
 					}
 					size = 0;
@@ -444,7 +444,7 @@ int ofApp::countFingers(int a, int b1, int b2, int dir){
 					finger_width[dir][counter][0][0] = i;
 					finger_width[dir][counter][0][1] = a;
 
-					if(size < max_of_M/4){
+					if(size < max_of_M/3){
 						counter++;
 					}
 					size = 0;
@@ -486,7 +486,7 @@ void ofApp::whereFingersAt(){
 			how_many_now = countFingers(y, x1, x2, i);
 			//fingers_vertical = false;
 		}
-		if((how_many > 1) && (how_many_now > 1)){
+		if((how_many > 0) && (how_many_now > 0)){
 			printf("found fingers on %d.side\n", i);
 			dir_of_fingers[index] = i;
 			index++;
@@ -623,6 +623,9 @@ void ofApp::findFingerTip3(int dir_index){
 					}
 				}
 				break;
+			default:
+				printf("no");
+				break;
 		}
 
 		if(length > min_length){
@@ -640,74 +643,52 @@ void ofApp::findFingerTip3(int dir_index){
 
 void ofApp::findFingerTip4(){
 
-	int count = 0;
+	fingers_found = 0;
+	int a1,a2,b1,b2;
+	bool backwards;
 	
 		switch(dir_of_fingers[0]){
-			case 1:
-				searchFromTo((Yc - 3*max_of_M), (Yc - max_of_M), (Xc - max_of_M), (Xc + max_of_M),  false);
-/*
-				for(int i = Yc - 3*max_of_M; i < Yc - max_of_M; i++){
-					for(int j = Xc - max_of_M; j < Xc + max_of_M; j++){
-						if(my_spot[index(i,j)] == 'y'){
-							if(!isThereFinger(j)){
-								fingers[index][0] = j;
-								fingers[index][1] = i;
-								count++;
-
-	printf("FINGER No. %d\t x: %d\t y: %d\t \n", index, fingers[index][0] ,fingers[index][1]);								index++;
-							}
-						}	
-					}
-				}*/
-				break;
 			case 0:
-				searchFromTo((Xc - 3*max_of_M), (Xc - max_of_M), (Yc - max_of_M), (Yc + max_of_M), false);
+				b1 = (Yc - max_of_M > 0) ? (Yc - max_of_M) : 0;
+				b2 = (Yc + max_of_M < HEIGHT) ? (Yc + max_of_M) : HEIGHT;
+				a1 = (Xc - 3*max_of_M > 0) ? (Xc - 3*max_of_M) : 0;
+				a2 = (Xc - max_of_M > 0) ? (Xc - max_of_M) : 0;
+				backwards = false;
 
-/*
-				for(int i = Xc - 3*max_of_M; i < Xc - max_of_M; i++){
-					for(int j = Yc - max_of_M; j < Yc + max_of_M; j++){
-						if(my_spot[index(j,i)] == 'y'){
-							if(!isThereFinger(i)){
-								fingers[index][0] = i;
-								fingers[index][1] = j;
-								count++;
-								index++;
-							}
-						}	
-					}
-				}*/
+//				searchFromTo((Xc - 3*max_of_M), (Xc - max_of_M), (Yc - max_of_M), (Yc + max_of_M), false);
 				break;
+			case 1:
+				a1 = (Yc - 3*max_of_M > 0) ? (Yc - 3*max_of_M) : 0;
+				a2 = (Yc - max_of_M > 0) ? (Yc - max_of_M) : 0;
+				b1 = (Xc - max_of_M > 0) ? (Xc - max_of_M) : 0;
+				b2 = (Xc + max_of_M < WIDTH) ? (Xc + max_of_M) : WIDTH;
+				backwards = false;
+//				searchFromTo((Yc - 3*max_of_M), (Yc - max_of_M), (Xc - max_of_M), (Xc + max_of_M),  false);
+				break;
+
 			case 2:
-				searchFromTo((Xc + 3*max_of_M), (Xc + max_of_M), (Yc - max_of_M), (Yc + max_of_M), true);
-				/*for(int i = Xc + 3*max_of_M; i > Xc + max_of_M; i--){
-					for(int j = Yc - max_of_M; j < Yc + max_of_M; j++){
-						if(my_spot[index(i,j)] == 'y'){
-							if(!isThereFinger(i)){
-								fingers[index][0] = i;
-								fingers[index][1] = j;
-								count++;
-								index++;
-							}
-						}	
-					}
-				}*/
+				b1 = (Yc - max_of_M > 0) ? (Yc - max_of_M) : 0;
+				b2 = (Yc + max_of_M < HEIGHT) ? (Yc + max_of_M) : HEIGHT;
+				a1 = (Xc + 3*max_of_M < WIDTH) ? (Xc + 3*max_of_M) : WIDTH;
+				a2 = (Xc + max_of_M < WIDTH) ? (Xc + max_of_M) : WIDTH;
+				backwards = true;
+
+//				searchFromTo((Xc + 3*max_of_M), (Xc + max_of_M), (Yc - max_of_M), (Yc + max_of_M), true);
 				break;
 			case 3:
-				searchFromTo((Yc + 3*max_of_M), (Yc + max_of_M), (Xc - max_of_M), (Xc + max_of_M), true);
-				/*for(int i = Yc + 3*max_of_M; i > Yc + max_of_M; i--){
-					for(int j = Xc - max_of_M; j < Xc + max_of_M; j++){
-						if(my_spot[index(i,j)] == 'y'){
-							if(!isThereFinger(j)){
-								fingers[index][0] = j;
-								fingers[index][1] = i;
-								count++;
-								index++;
-							}
-						}	
-					}
-				}*/
+				a1 = (Yc + 3*max_of_M < HEIGHT) ? (Yc + 3*max_of_M) : HEIGHT;
+				a2 = (Yc + max_of_M < HEIGHT) ? (Yc + max_of_M) : HEIGHT;
+				b1 = (Xc - max_of_M > 0) ? (Xc - max_of_M) : 0;
+				b2 = (Xc + max_of_M < WIDTH) ? (Xc + max_of_M) : WIDTH;
+				backwards = true;
+
+//				searchFromTo((Yc + 3*max_of_M), (Yc + max_of_M), (Xc - max_of_M), (Xc + max_of_M), true);
+				break;
+			default:
+				printf("no");
 				break;
 		}
+		searchFromTo(a1, a2, b1, b2, backwards);
 		printf("Found %d fingers \n", fingers_found);
 }
 
@@ -717,19 +698,26 @@ void ofApp::findFingerTip4(){
 */
 void ofApp::searchFromTo(int outer_from, int outer_to, int inner_from, int inner_to, bool otherWay){
 	
-	int interest;
-	int other;
+	fingers_found = 0;
+	int x,y;
 	if(!otherWay){
 		for(int i = outer_from; i < outer_to; i++){
 			for(int j = inner_from; j < inner_to; j++){
-				if(my_spot[index(i,j)] == 'y'){
-					interest = fingers_vertical ? i : j;
-					other = fingers_vertical ? j : i;
-					if(!isThereFinger(interest)){
-						fingers[fingers_found][0] = interest;
-						fingers[fingers_found][1] = other;
-						fingers_found++;
+				if(fingers_vertical){
+					x = i;
+					y = j;
+				}else{
+					x = j;
+					y = i;
+				}
+
+				if(my_spot[index(y,x)] == 'y'){
+					if(!isThereFinger(j)){
+						fingers[fingers_found][0] = x;
+						fingers[fingers_found][1] = y;
 						printf("FINGER No. %d\t x: %d\t y: %d\t \n", fingers_found, fingers[fingers_found][0] ,fingers[fingers_found][1]);
+						fingers_found++;
+
 					}
 				}	
 			}
@@ -737,22 +725,26 @@ void ofApp::searchFromTo(int outer_from, int outer_to, int inner_from, int inner
 	}else{
 		for(int i = outer_from; i > outer_to; i--){
 			for(int j = inner_from; j < inner_to; j++){
+				if(fingers_vertical){
+					x = i;
+					y = j;
+				}else{
+					x = j;
+					y = i;
+				}
 				if(my_spot[index(i,j)] == 'y'){
-					interest = fingers_vertical ? i : j;
-					other = fingers_vertical ? j : i;
-					if(!isThereFinger(interest)){
-						fingers[fingers_found][0] = interest;
-						fingers[fingers_found][1] = other;
-						fingers_found++;
+					if(!isThereFinger(j)){
+						fingers[fingers_found][0] = x;
+						fingers[fingers_found][1] = y;
 						printf("FINGER No. %d\t x: %d\t y: %d\t \n", fingers_found, fingers[fingers_found][0] ,fingers[fingers_found][1]);
+						fingers_found++;
 					}
 				}	
 			}
 		}
-
-
-
 	}
+
+
 }
 
 bool ofApp::isThereFinger(int a){
