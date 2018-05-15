@@ -133,7 +133,7 @@ void ofApp::draw(){
 		ofDrawBox((max_i-r)-255, (max_j-r)-212, 0, max_of_M, max_of_M, 5);
 	}
 
-	for(int i = 0; i < 4; i++){
+	for(int i = 0; i <= fingers_found; i++){
 		ofDrawSphere(fingers[i][0]-255, fingers[i][1]-212, max_of_M/4);
 	}
 
@@ -645,20 +645,23 @@ void ofApp::findFingerTip4(){
 
 	fingers_found = 0;
 	int a1,a2,b1,b2;
-	bool backwards;
-	
-		switch(dir_of_fingers[0]){
+	bool backwards = false;
+	int directions =(dir_of_fingers[1] == -1) ? 1 : 2;
+
+	for(int i = 0; i < directions; i ++){
+		printf("searching in %d. direction\n", dir_of_fingers[i]);
+		switch(dir_of_fingers[i]){
 			case 0:
 				b1 = (Yc - max_of_M > 0) ? (Yc - max_of_M) : 0;
 				b2 = (Yc + max_of_M < HEIGHT) ? (Yc + max_of_M) : HEIGHT;
-				a1 = (Xc - 3*max_of_M > 0) ? (Xc - 3*max_of_M) : 0;
+				a1 = (Xc - 2*max_of_M > 0) ? (Xc - 2*max_of_M) : 0;
 				a2 = (Xc - max_of_M > 0) ? (Xc - max_of_M) : 0;
 				backwards = false;
 
 //				searchFromTo((Xc - 3*max_of_M), (Xc - max_of_M), (Yc - max_of_M), (Yc + max_of_M), false);
 				break;
 			case 1:
-				a1 = (Yc - 3*max_of_M > 0) ? (Yc - 3*max_of_M) : 0;
+				a1 = (Yc - 2*max_of_M > 0) ? (Yc - 2*max_of_M) : 0;
 				a2 = (Yc - max_of_M > 0) ? (Yc - max_of_M) : 0;
 				b1 = (Xc - max_of_M > 0) ? (Xc - max_of_M) : 0;
 				b2 = (Xc + max_of_M < WIDTH) ? (Xc + max_of_M) : WIDTH;
@@ -669,14 +672,14 @@ void ofApp::findFingerTip4(){
 			case 2:
 				b1 = (Yc - max_of_M > 0) ? (Yc - max_of_M) : 0;
 				b2 = (Yc + max_of_M < HEIGHT) ? (Yc + max_of_M) : HEIGHT;
-				a1 = (Xc + 3*max_of_M < WIDTH) ? (Xc + 3*max_of_M) : WIDTH;
+				a1 = (Xc + 2*max_of_M < WIDTH) ? (Xc + 2*max_of_M) : WIDTH;
 				a2 = (Xc + max_of_M < WIDTH) ? (Xc + max_of_M) : WIDTH;
 				backwards = true;
 
 //				searchFromTo((Xc + 3*max_of_M), (Xc + max_of_M), (Yc - max_of_M), (Yc + max_of_M), true);
 				break;
 			case 3:
-				a1 = (Yc + 3*max_of_M < HEIGHT) ? (Yc + 3*max_of_M) : HEIGHT;
+				a1 = (Yc + 2*max_of_M < HEIGHT) ? (Yc + 2*max_of_M) : HEIGHT;
 				a2 = (Yc + max_of_M < HEIGHT) ? (Yc + max_of_M) : HEIGHT;
 				b1 = (Xc - max_of_M > 0) ? (Xc - max_of_M) : 0;
 				b2 = (Xc + max_of_M < WIDTH) ? (Xc + max_of_M) : WIDTH;
@@ -690,6 +693,7 @@ void ofApp::findFingerTip4(){
 		}
 		searchFromTo(a1, a2, b1, b2, backwards);
 		printf("Found %d fingers \n", fingers_found);
+	}
 }
 
 /*
@@ -717,7 +721,9 @@ void ofApp::searchFromTo(int outer_from, int outer_to, int inner_from, int inner
 						fingers[fingers_found][1] = y;
 						printf("FINGER No. %d\t x: %d\t y: %d\t \n", fingers_found, fingers[fingers_found][0] ,fingers[fingers_found][1]);
 						fingers_found++;
-
+						if(fingers_found == 1){ //cut range when first tip found
+							outer_to = i + max_of_M/2; 
+						}
 					}
 				}	
 			}
@@ -738,6 +744,9 @@ void ofApp::searchFromTo(int outer_from, int outer_to, int inner_from, int inner
 						fingers[fingers_found][1] = y;
 						printf("FINGER No. %d\t x: %d\t y: %d\t \n", fingers_found, fingers[fingers_found][0] ,fingers[fingers_found][1]);
 						fingers_found++;
+						if(fingers_found == 1){ //cut range when first tip found
+							outer_to = i - max_of_M/2;
+						}
 					}
 				}	
 			}
