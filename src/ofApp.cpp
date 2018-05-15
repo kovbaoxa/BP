@@ -54,6 +54,7 @@ void ofApp::update(){
 		ofTexture depth = texDepth[0];
 
 		size_of_hand = 0;
+		hand_found = 0;
 //		closestDepth = -1; // some not reachable value in case hand get further 
 		if(ofGetFrameNum()%4==0){//(int)ofGetElapsedTimef()%5==0){
 			printf("\n NEW UPDATE \t time: %f \n", ofGetElapsedTimef());
@@ -487,6 +488,7 @@ void ofApp::whereFingersAt(){
 			//fingers_vertical = false;
 		}
 		if((how_many > 0) && (how_many_now > 0)){
+			hand_found = true;
 			printf("found fingers on %d.side\n", i);
 			dir_of_fingers[index] = i;
 			index++;
@@ -646,6 +648,9 @@ void ofApp::findFingerTip4(){
 	fingers_found = 0;
 	int a1,a2,b1,b2;
 	bool backwards = false;
+	if(hand_found == false){
+		return;
+	}
 	int directions =(dir_of_fingers[1] == -1) ? 1 : 2;
 
 	for(int i = 0; i < directions; i ++){
@@ -702,7 +707,6 @@ void ofApp::findFingerTip4(){
 */
 void ofApp::searchFromTo(int outer_from, int outer_to, int inner_from, int inner_to, bool otherWay){
 	
-	fingers_found = 0;
 	int x,y;
 	if(!otherWay){
 		for(int i = outer_from; i < outer_to; i++){
@@ -758,7 +762,7 @@ void ofApp::searchFromTo(int outer_from, int outer_to, int inner_from, int inner
 
 bool ofApp::isThereFinger(int a){
 
-	int offset = max_of_M / 4; // block of size 2*palm is searched devided by 4 fingers
+	int offset = max_of_M / 2; // block of size 2*palm is searched devided by 4 fingers
 
 	for(int i = 0; i < num_of_banned; i++){
 		if(banned[i] == a){
@@ -775,8 +779,39 @@ bool ofApp::isThereFinger(int a){
 	return false;
 }
 
+/*
+* retunr index of finger according to location of found fingertip
+* TODO: only one direction handled
+* TODO: how do I know which side of hand am I looking at? - sort it desc by other diff(length)?
+*/
 int ofApp::identifyFinger(int x, int y){
-	return 0;
+
+	int diff = 0;
+
+	if(fingers_vertical){ 
+		diff = Yc - y;
+	} else {
+		diff = Xc - x;
+	}
+
+	switch(diff%max_of_M){ // magic number which decides index of finger
+		case -3 :
+			printf("finger at %d, %d indexed as 0\n", x, y);
+			return 0;
+		case -1:
+ 			printf("finger at %d, %d indexed as 1\n", x, y);
+			return 1;
+		case 1 :
+			printf("finger at %d, %d indexed as 2\n", x, y);
+			return 2;
+		case 3 :			
+			printf("finger at %d, %d indexed as 3\n", x, y);
+			return 3;
+		default :
+			printf("problem in identifyFinger");
+			break;
+	}
+	return -1;
 }
 
 /*

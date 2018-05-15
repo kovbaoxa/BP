@@ -106,6 +106,7 @@ class ofApp : public ofBaseApp{
 	int num_of_banned;
 	int banned[100];	//size of palm was always <50 
 	int fingers_found;
+	bool hand_found;
 
 /*
 * coordinates and size of found palm
