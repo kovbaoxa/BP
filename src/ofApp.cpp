@@ -34,8 +34,6 @@ void ofApp::setup(){
 
 	fbo.allocate(512,424,GL_RGBA,4);//GL_LUMINANCE);
 
-//	foundHand = false;
-
 	fbo.begin();
 	ofClear(0.0f,0.0f,0.0f,0.0f);//255,255,255,0);
 	fbo.end();
@@ -45,7 +43,6 @@ void ofApp::setup(){
 //--------------------------------------------------------------
 void ofApp::update(){
 
-	start:
 	kinect->update();
         if(kinect->isFrameNew()){
 		time_start = ofGetElapsedTimef();
@@ -55,7 +52,7 @@ void ofApp::update(){
 		ofTexture depth = texDepth[0];
 
 		size_of_hand = 0;
-		hand_found = 0;
+		hand_found = false;
 //		closestDepth = -1; // some not reachable value in case hand get further 
 		if(ofGetFrameNum()%4==0){//(int)ofGetElapsedTimef()%5==0){
 			printf("\n NEW UPDATE \t time: %f \n", ofGetElapsedTimef());
@@ -93,8 +90,8 @@ void ofApp::update(){
 
 			//printf("BINARY\n");
 			//printArray(my_binary);
-			if(max_of_M > 10){
-				whereFingersAt();
+			whereFingersAt();
+			if(hand_found){
 			//	findFingers();
 				findFingerTip4();
 			//	findFingerTip3(1);
@@ -179,11 +176,6 @@ void ofApp::findClosestSpot(){
 					closest_spot[size_of_hand][0] = i;
 					closest_spot[size_of_hand][1] = j;
 					size_of_hand++;
-					found_hand = true;
-			//	}else if(size_of_hand==0){
-			//		found_hand = false;
-				//	foundHand = false;
-				//	printf("---NOT HAND---");
 				}
 			 }
 		}
@@ -210,7 +202,6 @@ void ofApp::findInBinary(){
 					closest_spot[size_of_hand][0] = j;
 					closest_spot[size_of_hand][1] = i;
 					size_of_hand++;
-					found_hand = true;
 				}else{
 				//	foundHand = false;
 				//	printf("---NOT HAND---");
@@ -489,14 +480,15 @@ void ofApp::whereFingersAt(){
 			//fingers_vertical = false;
 		}
 		if((how_many > 0) && (how_many_now > 0)){
-			hand_found = true;
-			printf("found fingers on %d.side\n", i);
-			dir_of_fingers[index] = i;
-			index++;
+			//fingers can be only on two corresponding sides 0&1; 1&2; 2&3; 3&0
+			if((i == 0) || ((i - dir_of_fingers[0])%2 == 1)){
+				printf("found fingers on %d.side\n", i);
+				dir_of_fingers[index] = i;
+				index++;
+				hand_found = true;
+			}
 			fingers_vertical = (i%2 == 0);
 		//	printf("dir_of_fingers: %d \t %d \n", dir_of_fingers[0], dir_of_fingers[1]);
-		}else{
-			goto start;
 		}
 	}
 }
@@ -651,9 +643,6 @@ void ofApp::findFingerTip4(){
 	fingers_found = 0;
 	int a1,a2,b1,b2;
 	bool backwards = false;
-	if(hand_found == false){
-		return;
-	}
 	int directions =(dir_of_fingers[1] == -1) ? 1 : 2;
 
 	for(int i = 0; i < directions; i ++){

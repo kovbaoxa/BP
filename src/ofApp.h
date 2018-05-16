@@ -99,7 +99,6 @@ class ofApp : public ofBaseApp{
 	int size_of_hand;	// size of closest spot found on picture
 	int index;	
 	int offset_depth;	// hand is not always exactly in one plane
-	bool found_hand;
 	int closest_depth;	// closest depth on the picture	
 	int median_neigh[NEIGHBORHOOD];		// index for finding median according to neighborhood size
 	bool fingers_vertical;
