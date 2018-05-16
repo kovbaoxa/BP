@@ -47,7 +47,7 @@ class ofApp : public ofBaseApp{
 		void findFingerTip2(int finger_index, int x1, int x2, int y1, int y2);
 		void findFingerTip3(int i);
 		void findFingerTip4();
-		void searchFromTo(int from1, int to1, int from2, int to2, bool other_way);
+		void searchFromTo(int from1, int to1, int from2, int to2, bool other_way, int dir);
 		bool isThereFinger(int a);
 		int identifyFinger(int x, int y);
 		void findFingers();

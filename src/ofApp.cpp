@@ -45,6 +45,7 @@ void ofApp::setup(){
 //--------------------------------------------------------------
 void ofApp::update(){
 
+	start:
 	kinect->update();
         if(kinect->isFrameNew()){
 		time_start = ofGetElapsedTimef();
@@ -135,7 +136,7 @@ void ofApp::draw(){
 	}
 
 	for(int i = 0; i <= fingers_found; i++){
-		ofDrawSphere(fingers[i][0]-255, fingers[i][1]-212, max_of_M/4);
+		ofDrawSphere(fingers[i][0]-255, fingers[i][1]-212, max_of_M/5);
 	}
 
 	fbo.end();
@@ -494,6 +495,8 @@ void ofApp::whereFingersAt(){
 			index++;
 			fingers_vertical = (i%2 == 0);
 		//	printf("dir_of_fingers: %d \t %d \n", dir_of_fingers[0], dir_of_fingers[1]);
+		}else{
+			goto start;
 		}
 	}
 }
@@ -654,8 +657,9 @@ void ofApp::findFingerTip4(){
 	int directions =(dir_of_fingers[1] == -1) ? 1 : 2;
 
 	for(int i = 0; i < directions; i ++){
-		printf("searching in %d. direction\n", dir_of_fingers[i]);
-		switch(dir_of_fingers[i]){
+		int cur_direction = dir_of_fingers[i];
+		printf("searching in %d. direction\n", cur_direction );
+		switch(cur_direction){
 			case 0:
 				b1 = (Yc - max_of_M > 0) ? (Yc - max_of_M) : 0;
 				b2 = (Yc + max_of_M < HEIGHT) ? (Yc + max_of_M) : HEIGHT;
@@ -696,7 +700,7 @@ void ofApp::findFingerTip4(){
 				printf("no");
 				break;
 		}
-		searchFromTo(a1, a2, b1, b2, backwards);
+		searchFromTo(a1, a2, b1, b2, backwards, cur_direction);
 		printf("Found %d fingers \n", fingers_found);
 	}
 }
@@ -705,13 +709,13 @@ void ofApp::findFingerTip4(){
 *
 * TODO: find out what finger it is and write in right index of fingers
 */
-void ofApp::searchFromTo(int outer_from, int outer_to, int inner_from, int inner_to, bool otherWay){
+void ofApp::searchFromTo(int outer_from, int outer_to, int inner_from, int inner_to, bool otherWay, int direction){
 	
 	int x,y;
 	if(!otherWay){
 		for(int i = outer_from; i < outer_to; i++){
 			for(int j = inner_from; j < inner_to; j++){
-				if(fingers_vertical){
+				if(direction%2 == 0){
 					x = i;
 					y = j;
 				}else{
@@ -725,8 +729,11 @@ void ofApp::searchFromTo(int outer_from, int outer_to, int inner_from, int inner
 						fingers[fingers_found][1] = y;
 						printf("FINGER No. %d\t x: %d\t y: %d\t \n", fingers_found, fingers[fingers_found][0] ,fingers[fingers_found][1]);
 						fingers_found++;
-						if(fingers_found == 1){ //cut range when first tip found
+						if(fingers_found == 0){ //cut range when first tip found
 							outer_to = i + max_of_M/2; 
+						}
+						if(fingers_found == 3){
+							return;
 						}
 					}
 				}	
@@ -735,7 +742,7 @@ void ofApp::searchFromTo(int outer_from, int outer_to, int inner_from, int inner
 	}else{
 		for(int i = outer_from; i > outer_to; i--){
 			for(int j = inner_from; j < inner_to; j++){
-				if(fingers_vertical){
+				if(direction%2 == 0){
 					x = i;
 					y = j;
 				}else{
@@ -748,8 +755,11 @@ void ofApp::searchFromTo(int outer_from, int outer_to, int inner_from, int inner
 						fingers[fingers_found][1] = y;
 						printf("FINGER No. %d\t x: %d\t y: %d\t \n", fingers_found, fingers[fingers_found][0] ,fingers[fingers_found][1]);
 						fingers_found++;
-						if(fingers_found == 1){ //cut range when first tip found
+						if(fingers_found == 0){ //cut range when first tip found
 							outer_to = i - max_of_M/2;
+						}
+						if(fingers_found == 3){
+							return;
 						}
 					}
 				}	
