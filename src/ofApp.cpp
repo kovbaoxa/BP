@@ -37,7 +37,6 @@ void ofApp::setup(){
 	fbo.begin();
 	ofClear(0.0f,0.0f,0.0f,0.0f);//255,255,255,0);
 	fbo.end();
-
 }
 
 //--------------------------------------------------------------
@@ -57,12 +56,7 @@ void ofApp::update(){
 		if(ofGetFrameNum()%4==0){//(int)ofGetElapsedTimef()%5==0){
 			printf("\n NEW UPDATE \t time: %f \n", ofGetElapsedTimef());
 			
-			//free banned coordinates from last detection
-			for(int i = 0; i < num_of_banned; i++){
-				banned[i] = 0;
-			}
-			num_of_banned = 0;
-
+			nullBanned();
 			//null number of fingers
 			fingers_found = 0;
 
@@ -647,6 +641,8 @@ void ofApp::findFingerTip4(){
 
 	for(int i = 0; i < directions; i ++){
 		int cur_direction = dir_of_fingers[i];
+
+		nullBanned();
 		printf("searching in %d. direction\n", cur_direction );
 		switch(cur_direction){
 			case 0:
@@ -721,7 +717,7 @@ void ofApp::searchFromTo(int outer_from, int outer_to, int inner_from, int inner
 						if(fingers_found == 0){ //cut range when first tip found
 							outer_to = i + max_of_M/2; 
 						}
-						if(fingers_found == 3){
+						if(fingers_found == 4){
 							return;
 						}
 					}
@@ -747,7 +743,7 @@ void ofApp::searchFromTo(int outer_from, int outer_to, int inner_from, int inner
 						if(fingers_found == 0){ //cut range when first tip found
 							outer_to = i - max_of_M/2;
 						}
-						if(fingers_found == 3){
+						if(fingers_found == 4){
 							return;
 						}
 					}
@@ -763,7 +759,12 @@ bool ofApp::isThereFinger(int a){
 
 	int offset = max_of_M / 2; // block of size 2*palm is searched devided by 4 fingers
 
-	for(int i = 0; i < num_of_banned; i++){
+	if(num_of_banned == 100)
+		return true;
+
+	//printf("%d\t", fingers_found);
+	//printf("banned: %d\n",num_of_banned);
+	for(int i = 0; i < 100; i++){
 		if(banned[i] == a){
 			return true;
 		}
@@ -772,8 +773,13 @@ bool ofApp::isThereFinger(int a){
 	printf("a: %d\n", a);
 	for(int i = a - offset; i < a + offset; i++){
 		banned[num_of_banned++] = i;
+		if(num_of_banned>99){
+			break;
+		}
 //		printf("%d \t", i);
 	}
+	if(fingers_found > 4)
+	printf("%d\t", fingers_found);
 //	printf("\n");
 	return false;
 }
@@ -872,6 +878,15 @@ void ofApp::quickSort(int array[], int low, int high){
 		quickSort(array, low, partI - 1);
 		quickSort(array, partI + 1, high);
 	}
+}
+
+void ofApp::nullBanned(){
+		//free banned coordinates from last detection
+	for(int i = 0; i < 100; i++){
+		banned[i] = 0;
+	}
+	num_of_banned = 0;
+
 }
 
 //--------------------------------------------------------------

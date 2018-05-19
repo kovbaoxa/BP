@@ -52,6 +52,7 @@ class ofApp : public ofBaseApp{
 		int identifyFinger(int x, int y);
 		void findFingers();
 		void cropROI();
+		void nullBanned();
 
 	ofxPanel panel;
 
