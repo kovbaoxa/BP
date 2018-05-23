@@ -49,7 +49,7 @@ class ofApp : public ofBaseApp{
 		void findFingerTip4();
 		void searchFromTo(int from1, int to1, int from2, int to2, bool other_way, int dir);
 		bool isThereFinger(int a);
-		int identifyFinger(int x, int y);
+		int identifyFinger(int x, int y, bool horizontal);
 		void findFingers();
 		void cropROI();
 		void nullBanned();
