@@ -21,7 +21,8 @@ optional:
 7. draw.jar is debugging tool, which draws picture from txt file
 	requires 512 collumns and 424 rows
 	1st argument input file with numbers 0-255
-	2st argument output
+	2nd argument output
+	java -jar draw.jar $1st_argument$ $2nd_argument$
 
 Required HW
 	USB 3 port
